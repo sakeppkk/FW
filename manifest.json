@@ -1,0 +1,30 @@
+{
+  "name": "FW",
+  "short_name": "FW",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f8fbff",
+  "theme_color": "#dbeafe",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "SSC",
+      "short_name": "SSC",
+      "url": "./viewer.html?app=ssc"
+    },
+    {
+      "name": "Live",
+      "short_name": "Live",
+      "url": "./viewer.html?app=live"
+    }
+  ]
+}

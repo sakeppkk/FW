@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f172a" />
+  <title>FW Viewer</title>
+  <style>
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;height:100%;overflow:hidden}
+    body{font-family:ui-rounded,"SF Pro Display","Noto Sans Thai","Inter",system-ui,sans-serif;background:#0f172a;color:white}
+    .wrap{height:var(--app-height,100dvh);display:grid;grid-template-rows:60px minmax(0,1fr)}
+    .bar{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;padding:8px 10px;background:linear-gradient(135deg,rgba(15,23,42,.96),rgba(37,99,235,.94));border-bottom:1px solid rgba(255,255,255,.18);box-shadow:0 14px 40px rgba(15,23,42,.24)}
+    .left,.actions{display:flex;align-items:center;gap:8px;min-width:0}
+    .title{min-width:0}
+    .title strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:15px}
+    .title span{display:block;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:rgba(255,255,255,.68);font-size:11px;font-weight:750}
+    button,a{min-height:40px;border:1px solid rgba(255,255,255,.24);border-radius:16px;background:rgba(255,255,255,.13);color:#fff;padding:0 13px;font:inherit;font-weight:950;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;backdrop-filter:blur(18px);white-space:nowrap}
+    button:hover,a:hover{background:rgba(255,255,255,.20)}
+    .viewer{position:relative;min-height:0;background:#fff}
+    iframe{width:100%;height:100%;border:0;display:block;background:#fff}
+    .fallback{position:absolute;inset:0;display:none;place-items:center;padding:24px;background:radial-gradient(circle at 15% 10%,rgba(56,189,248,.20),transparent 30%),linear-gradient(135deg,#f8fbff,#eaf6ff 50%,#f6f3ff);color:#0f172a;text-align:center}
+    .fallback.show{display:grid}
+    .card{width:min(520px,100%);border:1px solid rgba(255,255,255,.78);border-radius:28px;padding:28px;background:rgba(255,255,255,.64);box-shadow:0 24px 80px rgba(15,23,42,.14);backdrop-filter:blur(28px)}
+    .card h1{margin:0 0 10px;font-size:24px}
+    .card p{margin:0 0 18px;color:rgba(15,23,42,.66);line-height:1.55;font-weight:750}
+    .card a{background:linear-gradient(135deg,#0f172a,#2563eb);border:0}
+    @media(max-width:760px){
+      .wrap{grid-template-rows:46px minmax(0,1fr)}
+      .bar{display:flex;gap:6px;padding:4px 6px;overflow-x:auto;scrollbar-width:none}
+      .bar::-webkit-scrollbar{display:none}
+      .left,.actions{flex:0 0 auto;gap:6px}
+      .title{display:none}
+      button,a{min-height:36px;border-radius:13px;padding:0 10px;font-size:12px;line-height:1}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="bar">
+      <div class="left">
+        <button type="button" onclick="location.href='./index.html'">← FW</button>
+        <button type="button" onclick="goAppHome()">App Home</button>
+      </div>
+      <div class="title"><strong id="title">FW</strong><span id="url" hidden></span></div>
+      <div class="actions">
+        <button type="button" onclick="reloadFrame()">Reload</button>
+        <a id="openExternal" href="./index.html" target="_blank" rel="noopener noreferrer">Open external</a>
+      </div>
+    </header>
+    <main class="viewer">
+      <iframe id="frame" title="FW app viewer" loading="eager"></iframe>
+      <section id="fallback" class="fallback" aria-live="polite">
+        <div class="card">
+          <h1 id="fallbackTitle">เปิดในแอพไม่ได้</h1>
+          <p>ระบบนี้อาจไม่อนุญาตให้เปิดในแอพ ให้กด Open external เพื่อเปิดแท็บใหม่</p>
+          <a id="fallbackOpen" href="./index.html" target="_blank" rel="noopener noreferrer">Open external</a>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script>
+    const APPS = {
+      ssc: { title: "SSC", url: "https://script.google.com/macros/s/AKfycbwSfaw2bgEOciLgC6ownFi90CkENWWgjrTxBRCNlLFxEzXqNWaft87X6Etvz2xdF4d-/exec?page=portal" },
+      live: { title: "Live", url: "https://sakeppkk.github.io/live-tran/" }
+    };
+    const params = new URLSearchParams(window.location.search);
+    const key = params.get("app") || "ssc";
+    const app = APPS[key] || APPS.ssc;
+    const frame = document.getElementById("frame");
+    const fallback = document.getElementById("fallback");
+    const openExternal = document.getElementById("openExternal");
+    const fallbackOpen = document.getElementById("fallbackOpen");
+
+    document.title = `FW - ${app.title}`;
+    document.getElementById("title").textContent = app.title;
+    document.getElementById("url").textContent = "";
+    document.getElementById("fallbackTitle").textContent = app.title;
+    openExternal.href = app.url;
+    fallbackOpen.href = app.url;
+
+    function loadFrame(url = app.url) {
+      fallback.classList.remove("show");
+      frame.src = url;
+      window.clearTimeout(window.fallbackTimer);
+      window.fallbackTimer = window.setTimeout(() => fallback.classList.add("show"), 8000);
+    }
+    function goAppHome() { loadFrame(app.url); }
+    function reloadFrame() {
+      const current = frame.src || app.url;
+      frame.src = "about:blank";
+      window.setTimeout(() => loadFrame(current), 80);
+    }
+    function fitViewport() {
+      document.documentElement.style.setProperty("--app-height", `${window.innerHeight}px`);
+    }
+    window.addEventListener("resize", fitViewport);
+    if (window.visualViewport) window.visualViewport.addEventListener("resize", fitViewport);
+    frame.addEventListener("load", () => window.clearTimeout(window.fallbackTimer));
+    frame.addEventListener("error", () => fallback.classList.add("show"));
+    fitViewport();
+    loadFrame();
+  </script>
+</body>
+</html>

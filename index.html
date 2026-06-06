@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>FW</title>
+  <meta name="theme-color" content="#dbeafe">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;font-family:ui-rounded,"SF Pro Display","Noto Sans Thai",system-ui,sans-serif;color:#0f172a;background:radial-gradient(circle at 12% 8%,rgba(56,189,248,.38),transparent 28%),radial-gradient(circle at 88% 12%,rgba(147,197,253,.34),transparent 25%),linear-gradient(135deg,#f8fbff,#eaf6ff 42%,#f6f3ff)}
+    .shell{width:min(980px,calc(100% - 32px));margin:auto;padding:30px 0}
+    .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
+    .brand{display:flex;gap:13px;align-items:center}
+    .mark{width:56px;height:56px;border-radius:20px;background:linear-gradient(135deg,#0f172a,#2563eb);color:white;display:grid;place-items:center;font-weight:1000;letter-spacing:-1px}
+    h1{margin:0;font-size:24px}.brand p{margin:4px 0 0;color:rgba(15,23,42,.62);font-size:12px;font-weight:850}
+    .layout{display:grid;grid-template-columns:320px 1fr;gap:22px}
+    .panel,.app,.section-title{border:1px solid rgba(255,255,255,.72);background:linear-gradient(145deg,rgba(255,255,255,.64),rgba(255,255,255,.30));backdrop-filter:blur(30px);box-shadow:0 24px 80px rgba(15,23,42,.13);border-radius:38px}
+    .hero{padding:28px;min-height:520px}
+    .tag{display:inline-flex;padding:9px 13px;border-radius:999px;background:rgba(255,255,255,.58);font-weight:900;font-size:13px}
+    .hero h2{font-size:58px;line-height:.94;letter-spacing:-3px;margin:30px 0}
+    .hero h2 span{background:linear-gradient(135deg,#0f172a,#2563eb 65%,#7c3aed);-webkit-background-clip:text;color:transparent}
+    .summary{display:grid;gap:12px}.sum{display:grid;grid-template-columns:44px 1fr auto;gap:12px;align-items:center;padding:13px;border-radius:24px;background:rgba(255,255,255,.52)}
+    .sum i{font-style:normal;width:44px;height:44px;border-radius:16px;display:grid;place-items:center;background:rgba(37,99,235,.12)}
+    .sum strong{display:block}.sum small{color:rgba(15,23,42,.62);font-weight:750}
+    .main{display:grid;gap:18px}.section-title{padding:22px 24px;display:flex;justify-content:space-between;align-items:center}
+    .apps{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+    .app{position:relative;min-height:260px;padding:22px;cursor:pointer;transition:.2s}
+    .app:hover{transform:translateY(-7px)}
+    .app-icon{width:70px;height:70px;border-radius:24px;background:rgba(255,255,255,.54);display:grid;place-items:center;font-size:32px}
+    .app h3{font-size:28px;margin:22px 0 4px}.app b,.app p{color:rgba(15,23,42,.62)}
+    .app button{position:absolute;right:22px;bottom:20px;width:44px;height:44px;border:0;border-radius:999px;color:white;background:linear-gradient(135deg,#0f172a,#2563eb);font-size:22px}
+    @media(max-width:900px){.layout{grid-template-columns:1fr}.hero{min-height:auto}.apps{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="top">
+      <div class="brand"><div class="mark">FW</div><div><h1>FW</h1><p>TEAM APP</p></div></div>
+      <div class="mark">👤</div>
+    </header>
+
+    <section class="layout">
+      <aside class="hero panel">
+        <div class="tag">✨ Premium Glass App</div>
+        <h2><span>FW</span><br>App</h2>
+        <div class="summary">
+          <div class="sum"><i>👥</i><div><strong>SSC</strong><small>Queue / Portal</small></div><b>1</b></div>
+          <div class="sum"><i>🎙️</i><div><strong>Live</strong><small>Live Transcriber</small></div><b>1</b></div>
+        </div>
+      </aside>
+
+      <section class="main">
+        <div class="section-title"><div><h2>Application Hub</h2><span>รวมระบบสำหรับทีม</span></div><strong>2 Apps</strong></div>
+        <section class="apps">
+          <article class="app" onclick="openViewer('ssc')"><div class="app-icon">👥</div><h3>SSC</h3><b>Queue System</b><p>Team</p><button>→</button></article>
+          <article class="app" onclick="openViewer('live')"><div class="app-icon">🎙️</div><h3>Live</h3><b>Transcriber</b><p>Team</p><button>→</button></article>
+        </section>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    function openViewer(app){location.href='./viewer.html?app='+encodeURIComponent(app)}
+    if('serviceWorker'in navigator){addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js'))}
+  </script>
+</body>
+</html>
