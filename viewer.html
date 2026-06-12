@@ -33,9 +33,26 @@
       .title{display:none}
       button,a{min-height:36px;border-radius:13px;padding:0 10px;font-size:12px;line-height:1}
     }
+  
+    .line-gate{position:fixed;inset:0;z-index:99999;display:none;place-items:center;padding:24px;background:linear-gradient(135deg,#f8fbff,#eaf6ff 42%,#f6f3ff);color:#0f172a}
+    .line-gate.show{display:grid}
+    .line-gate-card{width:min(440px,100%);border:1px solid rgba(255,255,255,.78);border-radius:30px;padding:28px;background:rgba(255,255,255,.84);box-shadow:0 24px 80px rgba(15,23,42,.14);text-align:center}
+    .line-gate-card h2{margin:0 0 10px;font-size:26px}.line-gate-card p{margin:0 0 16px;color:#64748b;font-weight:800;line-height:1.55}
+    .line-gate-card a{display:block;text-decoration:none;border-radius:18px;padding:14px 16px;margin-top:10px;background:linear-gradient(135deg,#0f172a,#2563eb);color:white;font-weight:950}
+
   </style>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
 <body>
+
+  <div id="lineGate" class="line-gate">
+    <div class="line-gate-card">
+      <h2>ต้องเปิดผ่าน LINE เท่านั้น</h2>
+      <p>หน้านี้ใช้ผ่าน LIFF เพื่อให้กล้องและระบบทำงานถูกต้อง</p>
+      <a href="https://liff.line.me/2010382422-bg7VucdI">เปิดผ่าน LINE LIFF</a>
+    </div>
+  </div>
+
   <div class="wrap">
     <header class="bar">
       <div class="left">
@@ -60,6 +77,25 @@
     </main>
   </div>
   <script>
+
+    const SSC_LIFF_ID = "2010382422-bg7VucdI";
+    async function enforceLineOnly(){
+      const gate = document.getElementById("lineGate");
+      try{
+        await liff.init({ liffId: SSC_LIFF_ID });
+        if(!liff.isInClient()){
+          if(gate) gate.classList.add("show");
+          return false;
+        }
+        return true;
+      }catch(err){
+        const ua = navigator.userAgent || "";
+        if(!/Line/i.test(ua) && gate) gate.classList.add("show");
+        return /Line/i.test(ua);
+      }
+    }
+    enforceLineOnly();
+
     const APPS = {
       ssc: { title: "SSC", url: "https://script.google.com/macros/s/AKfycbwSfaw2bgEOciLgC6ownFi90CkENWWgjrTxBRCNlLFxEzXqNWaft87X6Etvz2xdF4d-/exec?page=portal" },
       live: { title: "Live", url: "https://sakeppkk.github.io/live-tran/" }

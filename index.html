@@ -32,9 +32,31 @@
     .app h3{font-size:28px;margin:22px 0 4px}.app b,.app p{color:rgba(15,23,42,.62)}
     .app button{position:absolute;right:22px;bottom:20px;width:44px;height:44px;border:0;border-radius:999px;color:white;background:linear-gradient(135deg,#0f172a,#2563eb);font-size:22px}
     @media(max-width:900px){.layout{grid-template-columns:1fr}.hero{min-height:auto}.apps{grid-template-columns:1fr}}
+  
+    .line-gate{position:fixed;inset:0;z-index:99999;display:grid;place-items:center;padding:24px;background:linear-gradient(135deg,#f8fbff,#eaf6ff 42%,#f6f3ff);color:#0f172a}
+    .line-gate.hidden{display:none!important}
+    .line-gate-card{width:min(440px,100%);border:1px solid rgba(255,255,255,.78);border-radius:30px;padding:28px;background:rgba(255,255,255,.78);box-shadow:0 24px 80px rgba(15,23,42,.14);backdrop-filter:blur(24px);text-align:center}
+    .line-gate-mark{width:70px;height:70px;margin:0 auto 16px;border-radius:24px;background:linear-gradient(135deg,#0f172a,#2563eb);color:white;display:grid;place-items:center;font-size:28px;font-weight:1000}
+    .line-gate-card h2{margin:0 0 10px;font-size:26px}
+    .line-gate-card p{margin:0 0 16px;color:rgba(15,23,42,.66);line-height:1.55;font-weight:800}
+    .line-gate-card a{display:block;text-decoration:none;border-radius:18px;padding:14px 16px;margin-top:10px;background:linear-gradient(135deg,#0f172a,#2563eb);color:white;font-weight:950}
+    .line-gate-card small{display:block;margin-top:14px;color:#64748b;font-weight:800;line-height:1.45}
+
   </style>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
 <body>
+
+  <div id="lineGate" class="line-gate hidden" aria-live="polite">
+    <div class="line-gate-card">
+      <div class="line-gate-mark">LINE</div>
+      <h2>ต้องเปิดผ่าน LINE เท่านั้น</h2>
+      <p>ลิงก์นี้สำหรับเปิดจากแชท LINE / LIFF เพื่อให้กล้องทำงานถูกต้อง</p>
+      <a href="https://liff.line.me/2010382422-bg7VucdI">เปิดผ่าน LINE LIFF</a>
+      <small>ถ้าต้องการเปิดนอก LINE ให้ใช้ลิงก์ Apps Script ตรงของแต่ละระบบแทน</small>
+    </div>
+  </div>
+
   <main class="shell">
     <header class="top">
       <div class="brand"><div class="mark">FW</div><div><h1>FW</h1><p>TEAM APP</p></div></div>
@@ -62,6 +84,25 @@
   </main>
 
   <script>
+
+    const SSC_LIFF_ID = "2010382422-bg7VucdI";
+    async function enforceLineOnly(){
+      const gate = document.getElementById("lineGate");
+      try{
+        await liff.init({ liffId: SSC_LIFF_ID });
+        if(!liff.isInClient()){
+          if(gate) gate.classList.remove("hidden");
+          return false;
+        }
+        return true;
+      }catch(err){
+        const ua = navigator.userAgent || "";
+        if(!/Line/i.test(ua) && gate) gate.classList.remove("hidden");
+        return /Line/i.test(ua);
+      }
+    }
+    enforceLineOnly();
+
     function openViewer(app){location.href='./viewer.html?app='+encodeURIComponent(app)}
     if('serviceWorker'in navigator){addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js'))}
   </script>
