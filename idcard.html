@@ -1,0 +1,3435 @@
+﻿
+
+
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>SSC ID CARD SYSTEM - Framed Camera</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Mali:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+
+    <style>
+        :root { --primary: #4f46e5; --ssc-safe-bottom: env(safe-area-inset-bottom, 0px); }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html, body { margin: 0; padding: 0; width: 100%; height: 100dvh; font-family: 'Kanit', sans-serif; background: #f8fafc; overflow: hidden; }
+        body { display: flex; justify-content: center; align-items: flex-start; }
+        .main-container { width: 100%; height: 100dvh; background: #fff; overflow: hidden; display: flex; flex-direction: column; }
+        .content-wrapper { flex: 1; overflow-y: auto; padding: 1.2rem 1.2rem calc(6rem + var(--ssc-safe-bottom)); -webkit-overflow-scrolling: touch; }
+        .hidden { display: none !important; }
+        .mali-font { font-family: 'Mali', cursive; }
+        
+        /* สไตล์ฟิลด์และอินพุตแบบพรีเมียม */
+        .input-field { width: 100%; border: 2px solid #e2e8f0; background: #f8fafc; border-radius: 1.3rem; padding: 1.2rem; font-size: 1.15rem; font-weight: 600; outline: none; transition: all .3s ease; color: #0f172a; }
+        .input-field:focus { border-color: #4f46e5; background: #fff; box-shadow: 0 0 0 5px rgba(79, 70, 229, .10); }
+        .input-autofilled { border-color: #10b981; background: #f0fdf4; animation: pulse-green 1.5s; }
+        
+        .btn-primary { width: 100%; border: none; border-radius: 1.5rem; background: linear-gradient(135deg, #4f46e5, #6366f1); color: #fff; padding: 1.2rem; font-size: 1.3rem; font-weight: 700; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: .8rem; box-shadow: 0 10px 20px rgba(79, 70, 229, .20); transition: all 0.2s; }
+        .btn-primary:active { transform: scale(0.98); }
+        
+        .section-header { font-size: 1.15rem; font-weight: 800; color: #4338ca; margin-top: 2rem; margin-bottom: 1rem; padding-left: .8rem; border-left: 5px solid #4f46e5; }
+        .agreement-header { background: #4f46e5; color: #fff; padding: 1rem 1.2rem; border-top-left-radius: 1.5rem; border-top-right-radius: 1.5rem; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
+        .condition-box { border: 2px solid #e2e8f0; border-top: none; border-bottom-left-radius: 1.5rem; border-bottom-right-radius: 1.5rem; padding: 1.5rem; font-size: 1rem; line-height: 1.9; background: #fff; }
+        
+        /* กล่องกล้อง & กรอบจัดตำแหน่งบัตร */
+        .camera-box { background: #0f172a; border-radius: 2rem; padding: 1rem; overflow: hidden; position: relative; aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center; }
+        #camera, #camera2 { width: 100%; height: 100%; object-fit: cover; border-radius: 1.3rem; background: #000; }
+        .camera-overlay { position: absolute; inset: 0; display: flex; justify-content: center; align-items: center; pointer-events: none; }
+        /* กรอบบัตรแบบนิ่ง ไม่มีเส้นวิ่งสแกน */
+        .card-frame {
+            width: 88%;
+            aspect-ratio: 1.58;
+            border: 4px solid rgba(255,255,255,.95);
+            border-radius: 1.2rem;
+            position: relative;
+            box-shadow: 0 0 0 9999px rgba(0,0,0,.22), 0 0 24px rgba(255,255,255,.18);
+        }
+        .card-frame::before,
+        .card-frame::after {
+            content: "";
+            position: absolute;
+            inset: -4px;
+            border-radius: 1.2rem;
+            pointer-events: none;
+        }
+        
+        /* ไม่มีเส้นสแกนวิ่ง */
+        
+        .preview-image { width: 100%; border-radius: 1.3rem; border: 3px solid #4f46e5; }
+        .queue-ticket { background: linear-gradient(135deg, #111827, #0f172a); border-radius: 2rem; padding: 2rem; color: #fff; text-align: center; }
+        #loading { position: fixed; inset: 0; background: rgba(255, 255, 255, 0.95); z-index: 999; display: none; justify-content: center; align-items: center; flex-direction: column; }
+        
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 0 0px rgba(16, 185, 129, 0.4); }
+            100% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+        }
+    
+/* =========================================================
+   PATCH: จัดหน้าแรกให้อยู่กลางจอ + ขยายฟอร์มลงทะเบียน
+   แก้เฉพาะ UI ตามที่แจ้ง
+========================================================= */
+
+/* หน้าแรก / หน้าเมนู ให้อยู่กลางจอ */
+#welcomeView{
+    min-height:calc(100dvh - 4rem);
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    padding-top:0 !important;
+    padding-bottom:8vh;
+}
+
+/* กันกรณีถูกซ่อน */
+#welcomeView.hidden{
+    display:none !important;
+}
+
+/* ขยายตัวหนังสือหน้าแรกเล็กน้อยให้ชัด */
+#welcomeView h1,
+#welcomeView h2{
+    font-size:clamp(2rem, 8vw, 3.4rem) !important;
+    line-height:1.25 !important;
+}
+
+#welcomeView p{
+    font-size:clamp(1.05rem, 4.2vw, 1.8rem) !important;
+    line-height:1.5 !important;
+}
+
+#welcomeView button{
+    font-size:clamp(1.15rem, 4.6vw, 2rem) !important;
+    min-height:72px;
+}
+
+/* ขยายช่องกรอกและตัวหนังสือหน้า Register ให้ใหญ่และชัด */
+#registerForm .input-field,
+#registerView .input-field{
+    font-size:1.55rem !important;
+    min-height:92px !important;
+    padding:1.45rem 1.35rem !important;
+    border-radius:1.45rem !important;
+    font-weight:600 !important;
+    line-height:1.45 !important;
+}
+
+#registerForm .input-field::placeholder,
+#registerView .input-field::placeholder{
+    font-size:1.35rem !important;
+    color:#94a3b8 !important;
+}
+
+#registerForm select.input-field,
+#registerView select.input-field{
+    font-size:1.45rem !important;
+}
+
+#registerForm textarea.input-field,
+#registerView textarea.input-field{
+    min-height:190px !important;
+    font-size:1.45rem !important;
+    line-height:1.8 !important;
+}
+
+#registerForm .section-header,
+#registerView .section-header{
+    font-size:1.35rem !important;
+    line-height:1.5 !important;
+    margin-top:2.2rem !important;
+    margin-bottom:1.05rem !important;
+}
+
+#registerForm span,
+#registerView span{
+    font-size:max(1rem, inherit);
+}
+
+#registerForm .grid,
+#registerView .grid{
+    gap:1.1rem !important;
+}
+
+#registerForm .btn-primary,
+#registerView .btn-primary{
+    font-size:1.5rem !important;
+    min-height:86px !important;
+    padding:1.5rem !important;
+    border-radius:1.55rem !important;
+}
+
+#registerForm label,
+#registerView label{
+    font-size:1.18rem !important;
+    line-height:1.6 !important;
+}
+
+#registerForm input[type="checkbox"],
+#registerView input[type="checkbox"]{
+    width:2rem !important;
+    height:2rem !important;
+    min-width:2rem !important;
+}
+
+#registerForm .condition-box,
+#registerView .condition-box{
+    font-size:1.25rem !important;
+    line-height:2.05 !important;
+}
+
+#registerForm .agreement-header,
+#registerView .agreement-header{
+    font-size:1.15rem !important;
+    line-height:1.5 !important;
+}
+
+@media (max-width:640px){
+
+    #welcomeView{
+        min-height:calc(100dvh - 1rem);
+        justify-content:center;
+        padding-top:0 !important;
+        padding-bottom:10vh !important;
+    }
+
+    #welcomeView .text-center{
+        padding-top:0 !important;
+        margin-bottom:1.5rem !important;
+    }
+
+    #registerForm .input-field,
+    #registerView .input-field{
+        font-size:1.45rem !important;
+        min-height:84px !important;
+        padding:1.25rem 1.15rem !important;
+        border-radius:1.35rem !important;
+    }
+
+    #registerForm .input-field::placeholder,
+    #registerView .input-field::placeholder{
+        font-size:1.25rem !important;
+    }
+
+    #registerForm textarea.input-field,
+    #registerView textarea.input-field{
+        min-height:160px !important;
+        font-size:1.35rem !important;
+    }
+
+    #registerForm .btn-primary,
+    #registerView .btn-primary{
+        font-size:1.35rem !important;
+        min-height:76px !important;
+        padding:1.25rem !important;
+    }
+
+    #registerForm .condition-box,
+    #registerView .condition-box{
+        font-size:1.12rem !important;
+        line-height:1.95 !important;
+    }
+
+    #registerForm .agreement-header,
+    #registerView .agreement-header{
+        font-size:1rem !important;
+    }
+}
+
+
+/* =========================================================
+   PATCH 2: ขยายตัวหนังสือ/ช่องกรอกในหน้าลงทะเบียนให้ใหญ่ขึ้นอีก
+   แก้เฉพาะ Register Form ทั้งหน้า
+========================================================= */
+
+#registerForm,
+#registerView{
+    font-size:1.45rem !important;
+    line-height:1.75 !important;
+}
+
+#registerForm h2,
+#registerView h2{
+    font-size:clamp(2.6rem, 8vw, 4.2rem) !important;
+    line-height:1.22 !important;
+    font-weight:800 !important;
+}
+
+#registerForm .section-header,
+#registerView .section-header{
+    font-size:1.75rem !important;
+    line-height:1.45 !important;
+    font-weight:900 !important;
+    margin-top:2.5rem !important;
+    margin-bottom:1.25rem !important;
+}
+
+#registerForm .agreement-header,
+#registerView .agreement-header{
+    font-size:1.45rem !important;
+    line-height:1.55 !important;
+    padding:1.55rem 1.45rem !important;
+    font-weight:800 !important;
+}
+
+#registerForm .condition-box,
+#registerView .condition-box{
+    font-size:1.55rem !important;
+    line-height:2.25 !important;
+    padding:2rem 1.65rem !important;
+    font-weight:500 !important;
+}
+
+#registerForm .condition-box p,
+#registerView .condition-box p,
+#registerForm .condition-box div,
+#registerView .condition-box div{
+    font-size:inherit !important;
+    line-height:inherit !important;
+}
+
+#registerForm label,
+#registerView label{
+    font-size:1.55rem !important;
+    line-height:1.65 !important;
+    padding:1.55rem !important;
+}
+
+#registerForm label span,
+#registerView label span{
+    font-size:1.55rem !important;
+    line-height:1.65 !important;
+}
+
+#registerForm input[type="checkbox"],
+#registerView input[type="checkbox"]{
+    width:2.45rem !important;
+    height:2.45rem !important;
+    min-width:2.45rem !important;
+}
+
+#registerForm .input-field,
+#registerView .input-field,
+#registerForm input,
+#registerView input,
+#registerForm select,
+#registerView select,
+#registerForm textarea,
+#registerView textarea{
+    font-size:1.95rem !important;
+    min-height:112px !important;
+    padding:1.75rem 1.55rem !important;
+    border-radius:1.65rem !important;
+    font-weight:700 !important;
+    line-height:1.45 !important;
+}
+
+#registerForm .input-field::placeholder,
+#registerView .input-field::placeholder,
+#registerForm input::placeholder,
+#registerView input::placeholder,
+#registerForm textarea::placeholder,
+#registerView textarea::placeholder{
+    font-size:1.7rem !important;
+    font-weight:500 !important;
+    color:#94a3b8 !important;
+}
+
+#registerForm textarea.input-field,
+#registerView textarea.input-field,
+#registerForm textarea,
+#registerView textarea{
+    min-height:240px !important;
+    font-size:1.85rem !important;
+    line-height:1.85 !important;
+}
+
+#registerForm .relative span,
+#registerView .relative span,
+#registerForm span.text-xs,
+#registerView span.text-xs{
+    font-size:1.25rem !important;
+    line-height:1.4 !important;
+    font-weight:800 !important;
+}
+
+#registerForm .grid,
+#registerView .grid{
+    gap:1.45rem !important;
+}
+
+#registerForm .space-y-4 > * + *,
+#registerView .space-y-4 > * + *,
+#registerForm .space-y-5 > * + *,
+#registerView .space-y-5 > * + *,
+#registerForm .space-y-6 > * + *,
+#registerView .space-y-6 > * + *{
+    margin-top:1.45rem !important;
+}
+
+#registerForm .btn-primary,
+#registerView .btn-primary,
+#registerForm button,
+#registerView button{
+    font-size:1.85rem !important;
+    min-height:104px !important;
+    padding:1.85rem !important;
+    border-radius:1.85rem !important;
+    font-weight:800 !important;
+}
+
+@media (max-width:640px){
+
+    #registerForm,
+    #registerView{
+        font-size:1.35rem !important;
+    }
+
+    #registerForm h2,
+    #registerView h2{
+        font-size:2.55rem !important;
+    }
+
+    #registerForm .section-header,
+    #registerView .section-header{
+        font-size:1.45rem !important;
+    }
+
+    #registerForm .agreement-header,
+    #registerView .agreement-header{
+        font-size:1.2rem !important;
+        padding:1.25rem 1.15rem !important;
+    }
+
+    #registerForm .condition-box,
+    #registerView .condition-box{
+        font-size:1.25rem !important;
+        line-height:2.05 !important;
+        padding:1.55rem 1.25rem !important;
+    }
+
+    #registerForm label,
+    #registerView label,
+    #registerForm label span,
+    #registerView label span{
+        font-size:1.25rem !important;
+    }
+
+    #registerForm .input-field,
+    #registerView .input-field,
+    #registerForm input,
+    #registerView input,
+    #registerForm select,
+    #registerView select,
+    #registerForm textarea,
+    #registerView textarea{
+        font-size:1.7rem !important;
+        min-height:98px !important;
+        padding:1.45rem 1.25rem !important;
+        border-radius:1.5rem !important;
+    }
+
+    #registerForm .input-field::placeholder,
+    #registerView .input-field::placeholder,
+    #registerForm input::placeholder,
+    #registerView input::placeholder,
+    #registerForm textarea::placeholder,
+    #registerView textarea::placeholder{
+        font-size:1.45rem !important;
+    }
+
+    #registerForm textarea.input-field,
+    #registerView textarea.input-field,
+    #registerForm textarea,
+    #registerView textarea{
+        min-height:190px !important;
+        font-size:1.55rem !important;
+    }
+
+    #registerForm .relative span,
+    #registerView .relative span,
+    #registerForm span.text-xs,
+    #registerView span.text-xs{
+        font-size:1.05rem !important;
+    }
+
+    #registerForm .btn-primary,
+    #registerView .btn-primary,
+    #registerForm button,
+    #registerView button{
+        font-size:1.55rem !important;
+        min-height:88px !important;
+        padding:1.45rem !important;
+    }
+}
+
+
+/* =========================================================
+   PATCH CAMERA: เปิดกล้องในหน้าเว็บเพื่อให้เห็นกรอบบัตร + บันทึกรูปบัตรแบบ crop ชัดขึ้น
+   แก้เฉพาะส่วนกล้อง/ภาพบัตร
+========================================================= */
+.camera-box{
+    min-height:320px !important;
+    aspect-ratio:1.58 !important;
+    background:#020617 !important;
+    border-radius:2rem !important;
+    padding:.65rem !important;
+}
+
+#camera,
+#camera2{
+    width:100% !important;
+    height:100% !important;
+    object-fit:cover !important;
+    border-radius:1.35rem !important;
+}
+
+.card-frame{
+    width:92% !important;
+    max-width:620px !important;
+    aspect-ratio:1.58 !important;
+    border:5px solid rgba(255,255,255,.98) !important;
+    border-radius:1.15rem !important;
+    box-shadow:0 0 0 9999px rgba(0,0,0,.38), 0 0 28px rgba(255,255,255,.35) !important;
+}
+
+.card-frame::before{
+    content:"วางบัตรให้อยู่ในกรอบนี้";
+    position:absolute;
+    top:-2.25rem;
+    left:50%;
+    transform:translateX(-50%);
+    color:#fff;
+    background:rgba(79,70,229,.92);
+    padding:.35rem .8rem;
+    border-radius:999px;
+    font-size:.95rem;
+    font-weight:800;
+    white-space:nowrap;
+}
+
+.card-frame::after{
+    content:"";
+    position:absolute;
+    inset:10px;
+    border:2px dashed rgba(255,255,255,.55);
+    border-radius:.8rem;
+}
+
+.inline-camera-actions{
+    display:none;
+    grid-template-columns:1fr 1fr;
+    gap:1rem;
+    margin-top:1rem;
+}
+
+.inline-camera-actions.active{
+    display:grid;
+}
+
+.btn-capture-card{
+    background:linear-gradient(135deg,#10b981,#14b8a6) !important;
+}
+
+.btn-cancel-camera{
+    background:linear-gradient(135deg,#64748b,#334155) !important;
+}
+
+.crop-modal{
+    position:fixed;
+    inset:0;
+    height:100dvh;
+    max-height:100dvh;
+    z-index:1200;
+    background:rgba(2,6,23,.92);
+    display:none;
+    flex-direction:column;
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    padding:1rem 1rem calc(1.2rem + var(--ssc-safe-bottom));
+}
+
+.crop-modal.active{
+    display:flex;
+}
+
+.crop-stage{
+    flex:1;
+    min-height:0;
+    max-height:min(58dvh, calc(100dvh - 280px));
+    position:relative;
+    border-radius:1.5rem;
+    overflow:hidden;
+    background:#020617;
+    touch-action:none;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.crop-stage img{
+    position:absolute;
+    left:50%;
+    top:50%;
+    max-width:none;
+    user-select:none;
+    -webkit-user-drag:none;
+    transform-origin:center center;
+    z-index:1;
+    opacity:1;
+}
+
+.crop-frame{
+    width:var(--crop-frame-width, min(92vw, 720px));
+    aspect-ratio:1.58;
+    border:4px solid rgba(255,255,255,.98);
+    border-radius:1rem;
+    box-shadow:0 0 0 9999px rgba(0,0,0,.42), 0 0 24px rgba(255,255,255,.22);
+    position:relative;
+    z-index:2;
+    pointer-events:none;
+}
+
+.crop-frame::after{
+    content:"";
+    position:absolute;
+    inset:10px;
+    border:2px dashed rgba(255,255,255,.55);
+    border-radius:.7rem;
+}
+
+.crop-actions{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:.8rem;
+    margin-top:1rem;
+    position:sticky;
+    bottom:calc(.7rem + var(--ssc-safe-bottom));
+    z-index:5;
+    padding:.65rem;
+    border:1px solid rgba(148,163,184,.24);
+    border-radius:1rem;
+    background:rgba(15,23,42,.96);
+    box-shadow:0 16px 36px rgba(2,6,23,.32);
+}
+
+.crop-range{
+    width:100%;
+    accent-color:#4f46e5;
+}
+
+.crop-control-label{
+    color:#cbd5e1;
+    font-size:.82rem;
+    font-weight:800;
+    margin:.45rem 0 .18rem;
+    display:flex;
+    justify-content:space-between;
+}
+
+@media(max-width:640px){
+    .crop-modal{
+        padding:.65rem .65rem calc(1rem + var(--ssc-safe-bottom));
+    }
+    .crop-stage{
+        flex:1 1 auto;
+        min-height:34dvh;
+        max-height:calc(100dvh - 330px);
+    }
+.crop-actions .btn-primary{
+        min-height:56px !important;
+        font-size:1rem !important;
+        padding:.8rem !important;
+    }
+}
+
+.crop-help{
+    background:rgba(15,23,42,.78);
+    border:1px solid rgba(148,163,184,.25);
+    border-radius:1rem;
+    padding:.75rem .9rem;
+    margin:.65rem 0;
+    color:#e2e8f0;
+    font-size:.95rem;
+    font-weight:800;
+    line-height:1.55;
+}
+
+@media(max-width:640px){
+    .crop-modal > .text-white{
+        margin-bottom:.55rem !important;
+    }
+    .crop-modal > .text-white .text-2xl{
+        font-size:1.35rem !important;
+        line-height:1.25 !important;
+    }
+    .crop-help{
+        font-size:.82rem;
+        line-height:1.45;
+        padding:.6rem .75rem;
+        margin:.55rem 0;
+    }
+    .crop-control-panel{
+        padding:.6rem .75rem .72rem;
+        margin-top:.55rem;
+    }
+}
+
+.crop-control-panel{
+    background:rgba(15,23,42,.92);
+    border:1px solid rgba(148,163,184,.26);
+    border-radius:1.1rem;
+    padding:.8rem .9rem .95rem;
+    margin-top:.85rem;
+}
+
+.crop-range{
+    height:34px;
+    cursor:pointer;
+}
+
+.crop-range::-webkit-slider-runnable-track{
+    height:10px;
+    border-radius:999px;
+    background:#334155;
+}
+
+.crop-range::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    appearance:none;
+    width:28px;
+    height:28px;
+    border-radius:999px;
+    background:#6366f1;
+    border:4px solid #fff;
+    margin-top:-9px;
+    box-shadow:0 3px 12px rgba(0,0,0,.35);
+}
+
+.crop-range::-moz-range-track{
+    height:10px;
+    border-radius:999px;
+    background:#334155;
+}
+
+.crop-range::-moz-range-thumb{
+    width:24px;
+    height:24px;
+    border-radius:999px;
+    background:#6366f1;
+    border:4px solid #fff;
+    box-shadow:0 3px 12px rgba(0,0,0,.35);
+}
+
+#cameraFilePreview,
+#cameraFilePreview2{
+    object-fit:contain !important;
+    background:#020617 !important;
+    width:100% !important;
+    height:100% !important;
+}
+
+@media(max-width:640px){
+    .camera-box{
+        min-height:250px !important;
+    }
+    .card-frame{
+        width:94% !important;
+    }
+    .card-frame::before{
+        font-size:.8rem;
+        top:-2rem;
+    }
+}
+
+
+
+
+/* PATCH REQUIRED STAR IDCARD: แสดง * สีแดงเฉพาะช่องที่ต้องกรอก */
+.ssc-required-wrap{
+    position:relative !important;
+}
+.ssc-required-wrap::after{
+    content:"*";
+    position:absolute;
+    right:1.05rem;
+    top:.55rem;
+    color:#ef4444;
+    font-size:2rem;
+    font-weight:900;
+    line-height:1;
+    z-index:20;
+    pointer-events:none;
+}
+
+
+/* PATCH TOAST IDCARD: แจ้งเตือนในหน้าเว็บแทน popup */
+#customToast{
+    position:fixed;
+    top:1.25rem;
+    left:50%;
+    transform:translateX(-50%);
+    z-index:10000;
+}
+#customToast.hidden{
+    display:none !important;
+}
+#customToast .toast-box{
+    background:#0f172a;
+    color:#fff;
+    padding:1rem 1.35rem;
+    border-radius:1.25rem;
+    box-shadow:0 20px 45px rgba(15,23,42,.28);
+    display:flex;
+    align-items:center;
+    gap:.75rem;
+    max-width:92vw;
+    font-weight:800;
+    font-size:1rem;
+}
+#customToast .toast-box i{
+    color:#fbbf24;
+}
+
+#registerView,
+#checkinView{
+    font-size:18px;
+}
+
+#registerView .section-header,
+#checkinView .section-header{
+    font-size:1.35rem !important;
+}
+
+#registerView span,
+#checkinView span{
+    line-height:1.55;
+}
+
+#registerView .input-field,
+#checkinView .input-field{
+    font-size:1.25rem !important;
+    line-height:1.35 !important;
+    min-height:72px !important;
+}
+
+#registerView label span,
+#checkinView label span{
+    font-size:1.15rem !important;
+}
+
+@media(max-width:640px){
+    #registerView,
+    #checkinView{
+        font-size:19px;
+    }
+
+    #registerView .input-field,
+    #checkinView .input-field{
+        font-size:1.32rem !important;
+        min-height:76px !important;
+    }
+
+    #registerView .grid.grid-cols-2{
+        grid-template-columns:1fr !important;
+    }
+}
+
+#registerView,
+#checkinView{
+    --ssc-form-text: clamp(19px, 4.8vw, 24px);
+    --ssc-form-label: clamp(20px, 5.1vw, 26px);
+    --ssc-form-input: clamp(19px, 4.8vw, 24px);
+    --ssc-form-help: clamp(16px, 4vw, 20px);
+}
+
+#registerView .condition-box{
+    font-size:var(--ssc-form-text) !important;
+    line-height:1.72 !important;
+}
+
+#registerView .condition-box p{
+    margin-bottom:1.05rem !important;
+}
+
+#registerView .section-header,
+#checkinView .section-header{
+    font-size:var(--ssc-form-label) !important;
+    line-height:1.35 !important;
+}
+
+#registerView span.text-xs,
+#checkinView span.text-xs{
+    font-size:var(--ssc-form-help) !important;
+    line-height:1.35 !important;
+}
+
+#registerView label span,
+#checkinView label span{
+    font-size:var(--ssc-form-text) !important;
+    line-height:1.55 !important;
+}
+
+#registerView .input-field,
+#checkinView .input-field{
+    font-size:var(--ssc-form-input) !important;
+    line-height:1.35 !important;
+    min-height:clamp(76px, 13vw, 92px) !important;
+}
+
+#registerView .input-field::placeholder,
+#checkinView .input-field::placeholder{
+    font-size:clamp(17px, 4.35vw, 22px) !important;
+}
+
+#registerView .btn-primary,
+#checkinView .btn-primary{
+    font-size:clamp(18px, 4.6vw, 23px) !important;
+    line-height:1.35 !important;
+}
+
+/* Mobile readability pass: larger, single-column Google Forms-like input flow. */
+:root{
+    --ssc-readable-text: clamp(26px, 6.9vw, 36px);
+    --ssc-readable-label: clamp(27px, 7.2vw, 38px);
+    --ssc-readable-input: clamp(26px, 6.9vw, 36px);
+    --ssc-readable-help: clamp(23px, 6vw, 31px);
+}
+
+#registerView,
+#checkinView{
+    font-size:var(--ssc-readable-text) !important;
+    line-height:1.55 !important;
+}
+
+#registerView .section-header,
+#checkinView .section-header{
+    font-size:var(--ssc-readable-label) !important;
+    line-height:1.35 !important;
+}
+
+#registerView .input-field,
+#checkinView .input-field,
+#registerView input,
+#checkinView input,
+#registerView select,
+#checkinView select,
+#registerView textarea,
+#checkinView textarea{
+    font-size:var(--ssc-readable-input) !important;
+    line-height:1.35 !important;
+    min-height:clamp(108px, 22vw, 148px) !important;
+    padding:clamp(26px, 6vw, 36px) clamp(22px, 6.4vw, 36px) !important;
+}
+
+#registerView .input-field::placeholder,
+#checkinView .input-field::placeholder,
+#registerView input::placeholder,
+#checkinView input::placeholder,
+#registerView textarea::placeholder,
+#checkinView textarea::placeholder{
+    font-size:clamp(24px, 6.3vw, 33px) !important;
+}
+
+#registerView label,
+#checkinView label,
+#registerView label span,
+#checkinView label span,
+#registerView span,
+#checkinView span{
+    font-size:var(--ssc-readable-help) !important;
+    line-height:1.5 !important;
+}
+
+#registerView .condition-box{
+    font-size:var(--ssc-readable-text) !important;
+    line-height:1.75 !important;
+}
+
+#registerView .btn-primary,
+#checkinView .btn-primary,
+#registerView button,
+#checkinView button{
+    font-size:clamp(25px, 6.5vw, 35px) !important;
+    min-height:clamp(102px, 20vw, 138px) !important;
+}
+
+@media(max-width:640px){
+    #registerView,
+    #checkinView{
+        width:100% !important;
+    }
+
+    #registerView .grid,
+    #checkinView .grid{
+        grid-template-columns:1fr !important;
+        gap:1rem !important;
+    }
+}
+
+/* Registration forms should read like a clear paper form: one field per row. */
+#registerView .grid,
+#checkinView .grid{
+    grid-template-columns:1fr !important;
+    gap:1rem !important;
+}
+
+</style>
+<script>window.SSC_INITIAL_PARAMS={};</script>
+</head>
+<body>
+
+<div class="main-container">
+    <!-- แถบแจ้งเตือนอัจฉริยะหากพบว่าเปิดในแอปที่บล็อกกล้อง -->
+    <div id="browserWarningBanner" class="hidden bg-gradient-to-r from-red-500 to-pink-600 text-white p-4 text-center font-bold text-base shadow-md flex items-center justify-center gap-3 z-50">
+        <i class="fas fa-exclamation-triangle text-xl animate-pulse"></i>
+        <span>เพื่อความเสถียรของกล้อง กรุณากดปุ่ม 3 จุดมุมบน แล้วเลือก <b>"เปิดด้วยเบราว์เซอร์อื่น"</b> หรือ <b>"เปิดใน Chrome"</b></span>
+    </div>
+
+    <!-- โหลดดิ้งเซฟฟิลเตอร์การอัปโหลดไฟล์/ประมวลผลระบบ -->
+    <div id="loading">
+        <div class="animate-spin rounded-full h-20 w-20 border-t-4 border-indigo-600 mb-5"></div>
+        <div class="text-2xl font-bold text-indigo-700" id="loadingText">กำลังประมวลผล...</div>
+    </div>
+
+    <!-- อินพุตตัวเลือกดึงภาพจากระบบภายนอก (กล้องจริง หรือ คลังรูปภาพ) -->
+    <input type="file" accept="image/*" capture="environment" id="cameraInputRegister" class="hidden" onchange="handleFileCapture(this, 'register')">
+    <input type="file" accept="image/*" id="galleryInputRegister" class="hidden" onchange="handleFileCapture(this, 'register')">
+    
+    <input type="file" accept="image/*" capture="environment" id="cameraInputCheckin" class="hidden" onchange="handleFileCapture(this, 'checkin')">
+    <input type="file" accept="image/*" id="galleryInputCheckin" class="hidden" onchange="handleFileCapture(this, 'checkin')">
+    <datalist id="subdistrictOptions"></datalist>
+    <datalist id="districtOptions"></datalist>
+    <datalist id="provinceOptions"></datalist>
+
+    <div id="cropModal" class="crop-modal">
+        <div class="text-white mb-3">
+            <div class="text-2xl font-black">จัดกรอบรูปบัตร</div>
+            <div class="text-sm text-slate-300 font-bold">ลากรูปซ้ายขวา/ขึ้นลง แล้วปรับกรอบให้พอดีกับบัตร</div>
+        </div>
+        <div id="cropStage" class="crop-stage">
+            <img id="cropImage" alt="ID card crop preview">
+            <div class="crop-frame"></div>
+        </div>
+        <div class="crop-help">
+            วางบัตรให้อยู่ในกรอบสีขาว ใช้แถบ "ขนาดกรอบ" ให้ครอบบัตรพอดี แล้วใช้ "ขยายรูป" เมื่อรูปเล็กหรือใหญ่เกินไป
+        </div>
+        <div class="crop-control-panel">
+            <div class="crop-control-label"><span>ขนาดกรอบ</span><span>ปรับให้ครอบบัตร</span></div>
+            <input id="cropFrameSize" class="crop-range" type="range" min="45" max="96" step="1" value="78">
+            <div class="crop-control-label"><span>ขยายรูป</span><span>ซูมเข้า/ออก</span></div>
+            <input id="cropZoom" class="crop-range" type="range" min="1" max="3" step="0.01" value="1">
+        </div>
+        <div class="crop-actions">
+            <button type="button" onclick="cancelCropImage()" class="btn-primary btn-cancel-camera">
+                <i class="fas fa-times"></i> ถ่าย/เลือกใหม่
+            </button>
+            <button type="button" onclick="confirmCropImage()" class="btn-primary btn-capture-card">
+                <i class="fas fa-check"></i> ยืนยันภาพนี้
+            </button>
+        </div>
+    </div>
+
+    <div class="content-wrapper">
+        <!-- ================= WELCOME VIEW ================= -->
+        <div id="welcomeView">
+            <div class="text-center pt-10 mb-10">
+                <div class="w-28 h-28 rounded-[2rem] bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto mb-6 shadow-sm">
+                    <i class="fas fa-id-card text-6xl"></i>
+                </div>
+                <h1 class="text-5xl font-bold mali-font text-slate-800">SSC ID CARD</h1>
+                <p class="text-2xl text-slate-500 mt-3">ระบบถ่ายบัตรประชาชนอัจฉริยะ</p>
+                <div class="mt-2 inline-flex items-center gap-2 px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-sm font-semibold">
+                    <span class="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping"></span>
+                    พร้อมบันทึกภาพบัตรสำหรับเอกสารยินยอม
+                </div>
+            </div>
+            <div class="space-y-5">
+                <button onclick="startRegister()" class="btn-primary py-8 text-2xl">
+                    <i class="fas fa-user-plus"></i> ลงทะเบียน + รับคิวทันที
+                </button>
+                <button onclick="startCheckin()" class="w-full border-4 border-indigo-100 text-indigo-700 bg-white rounded-[1.5rem] font-bold text-2xl py-8 transition active:scale-98">
+                    <i class="fas fa-qrcode mr-2"></i> Check-in รับคิว
+                </button>
+            </div>
+        </div>
+
+        <!-- ================= REGISTER VIEW ================= -->
+        <div id="registerView" class="hidden">
+            <div class="flex items-center mb-8">
+                <button onclick="stopAllStreams(); clearIdEntryState(); showView('welcomeView')" class="w-14 h-14 rounded-full bg-slate-100 text-slate-600 mr-4 text-xl flex items-center justify-center hover:bg-slate-200 transition">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <h2 class="text-4xl font-bold mali-font">ลงทะเบียนใหม่</h2>
+            </div>
+
+            <div class="agreement-header">
+                <span>ใบลงทะเบียนเข้าร่วมงานวิจัยที่บริษัท เท่านั้น</span>
+                <span class="text-sm opacity-70">FM-FW-17-แก้ไขครั้งที่ 7 : บังคับใช้วันที่ 30 มกราคม 2562</span>
+            </div>
+            <div class="condition-box">
+                <p class="font-bold text-indigo-800 text-2xl mb-5">การรักษาความลับของผู้เข้าร่วมงานวิจัย บริษัท อินเทจ (ประเทศไทย) จำกัด</p>
+                <div class="space-y-4">
+                    <p>1. ข้าพเจ้าจะเข้าร่วมการสำรวจตามคำแนะนำของบริษัทอินเทจ</p>
+                    <p>2. การเข้าร่วมในการสำรวจนี้เป็นไปโดยสมัครใจ  
+ข้าพเจ้าเข้าใจดีว่าข้าพเจ้าสามารถขอยุติการเข้าร่วมได้ทุกเมื่อและไม่ว่าด้วยเหตุผลใดก็ตาม</p>
+                    <p>3. ข้าพเจ้ายินยอมให้บริษัทอินเทจและบุคคลที่สามนำข้อมูลคำตอบแบบสอบถามที่ได้มาก่อนและหลังการสำรวจไปใช้</p>
+                    <p>4. ข้าพเจ้าเข้าใจและเห็นชอบว่า ข้อมูลส่วนบุคคลจากการสำรวจนี้ โดยหลักการแล้วจะไม่มีการนำไปเปิดเผยต่อสาธารณะ เช่น ในวิทยานิพนธ์ หรือตามงานประชุมวิชาการต่างๆ  แต่หากเกิดคดีความเกี่ยวกับสินค้าที่เกี่ยวข้องและมีการร้องขอให้ส่งมอบข้อมูลให้กับหน่วยงานราชการที่รับผิดชอบ อาจต้องทำการส่งมอบข้อมูลตามคำขอโดยทำการปกปิดข้อมูลที่สามารถระบุตัวตนได้ เช่น กลบเกลื่อนเสียงบุคคลก่อนทำการส่งมอบข้อมูล และในกรณีที่มีการร้องขอจากหน่วยงานดังกล่าวเป็นกรณีพิเศษ  อาจต้องทำการส่งมอบข้อมูลให้ตามคำขอนั้น โดยไม่มีการปกปิดหรือกลบเกลื่อนใดๆ เพื่อให้ความร่วมมือในการสืบสวนคดีความ
+</p>
+                    <p>5. ข้าพเจ้าเข้าใจดีว่า ข้อมูลที่ได้จากการสำรวจนี้เป็นข้อมูลความลับที่สำคัญและจะส่งผลกระทบต่อกิจกรรมของบริษัทที่เกี่ยวข้องกับการสำรวจนี้ และข้าพเจ้าจะรักษาความลับนี้โดยเคร่งครัดไม่ให้มีการรั่วไหลของข้อมูลออกไปสู่บุคคลที่สามที่ไม่มีความเกี่ยวข้องโดยตรงกับการสำรวจนี้โดยเด็ดขาด   
+
+“การรั่วไหลของข้อมูลออกไปสู่บุคคลที่สาม” หมายรวมถึง การบอกเล่าทางวาจา ทางการเขียน หรือทางอีเมล การโพสต์ข้อมูลบนอินเทอร์เน็ต
+ (โฮมเพจหรือบล็อกส่วนตัว และบริการสื่อสังคมออนไลน์ต่างๆ เช่น ทวิตเตอร์ มิกซี เฟซบุ๊ก เป็นต้น) 
+ การส่งข้อมูลไปตามสื่อต่างๆ ให้ผู้คนจำนวนมากที่ไม่จำเพาะเจาะจงได้รับรู้ (หนังสือพิมพ์ นิตยสาร โทรทัศน์ วิทยุ ฯลฯ)</p>
+                    <p>6. (กรณีมีสินค้าทดสอบ) ข้าพเจ้ายินดีเข้าร่วมงานวิจัยและร่วมทดสอบ ผลิตภัณฑ์ในครั้งนี้ ซึ่งก่อนเข้าร่วมงานวิจัย ข้าพเจ้าได้รับทราบว่าจะมีการทดสอบผลิตภัณฑ์และหรือรับรู้ถึงส่วนผสมผลิตภัณฑ์
+                </div>
+                <div class="mt-8 p-5 bg-amber-50 rounded-2xl border-2 border-amber-200 text-amber-900">
+                    <b class="block mb-2 text-xl">PDPA NOTICE</b>
+                    ข้อมูลส่วนบุคคล - บริษัทอินเทจ ประเทศไทย จำกัด ให้ความสำคัญในเรื่องข้อมูลส่วนบุคคลที่ท่านได้ให้ข้อมูลกับบริษัทไว้ใบแบบสอบถามนี้ ทางบริษัทจึงขอความยินยอมในการ นำข้อมูลของท่านไปใช้ ดังนี้ /สำหรับวิเคราะห์ข้อมูลข้อท่านในเชิงงานวิจัยการวิเคราะห์และนำข้อมูลในเชิงตัวเลข ส่งให้กับบริษัทคู่ค้าเราเท่านั้น/ สำหรับการจ่ายค่าตอบแทน ให้ผู้ที่ผ่านการสัมภาษณ์เท่านั้น/ สำหรับการแนะนำงานวิจัยใหม่ๆในอนาคตผู้สัมภาษณ์/ รักษาความลับในงานวิจัยชิ้นนี้ ท่านจะยินดีจะไม่นำข้อมูลวิจัยชิ้นนี้ ไปเปิดเผยแก่สาธารณะใดๆ
+                </div>
+            </div>
+
+            <label class="flex items-center gap-5 mt-6 bg-indigo-50 border-4 border-indigo-100 rounded-3xl p-5 cursor-pointer">
+                <input type="checkbox" id="agreeCondition" class="w-7 h-7 accent-indigo-600">
+                <span class="font-black text-red-600 text-lg">ยอมรับข้อตกลงทั้งหมด</span>
+            </label>
+
+            <!-- กล่องถ่ายรูปพร้อมกรอบจัดตำแหน่งบัตร -->
+            <div class="section-header">ถ่ายภาพบัตรประชาชน</div>
+            <div class="camera-box">
+                <video id="camera" class="hidden" autoplay playsinline muted></video>
+                <!-- พรีวิวภาพถ่ายจากการอัปโหลด -->
+                <img id="cameraFilePreview" class="hidden w-full h-full object-contain rounded-[1.3rem]" />
+
+                <!-- สถานะรอดึงภาพ -->
+                <div id="cameraPlaceholder" class="absolute inset-0 flex flex-col items-center justify-center text-slate-400">
+                    <i class="fas fa-camera text-5xl mb-2"></i>
+                    <span class="text-sm">กรุณากดเลือกปุ่มด้านล่างเพื่อถ่ายภาพหรืออัปโหลด</span>
+                </div>
+                
+                <!-- กรอบจัดตำแหน่งบัตรแบบนิ่ง ไม่มีเส้นสแกนวิ่ง -->
+                <div id="cameraOverlayRegister" class="camera-overlay">
+                    <div class="card-frame">
+                        
+                    </div>
+                </div>
+            </div>
+            
+            <!-- แจ้งเตือนสกัดข้อมูลสำเร็จ -->
+            <div id="ocrStatusBadge" class="hidden mt-3 bg-emerald-50 text-emerald-700 p-3 rounded-2xl flex items-center gap-2 font-bold text-sm border border-emerald-200">
+                <i class="fas fa-magic text-emerald-500 animate-bounce"></i>
+                <span>แนบภาพบัตรเรียบร้อยแล้ว กรุณากรอกข้อมูลเอง</span>
+            </div>
+            
+            <!-- แผงควบคุมกล้องและตัวจำลอง -->
+            <div class="grid grid-cols-2 gap-4 mt-5">
+                <button type="button" onclick="openNativeCameraFallback('register')" class="btn-primary cursor-pointer select-none text-sm py-5 bg-gradient-to-r from-blue-600 to-indigo-600">
+                    <i class="fas fa-camera text-base"></i> เปิดกล้องถ่ายบัตร
+                </button>
+                <label for="galleryInputRegister" class="btn-primary cursor-pointer select-none text-sm py-5 bg-gradient-to-r from-emerald-600 to-teal-600">
+                    <i class="fas fa-images text-base"></i> เลือกรูปจากคลังภาพ
+                </label>
+            </div>
+
+            <div id="inlineCameraActionsRegister" class="inline-camera-actions">
+                <button type="button" onclick="captureInlineCamera('register')" class="btn-primary btn-capture-card text-sm py-5">
+                    <i class="fas fa-check"></i> ใช้ภาพในกรอบนี้
+                </button>
+                <button type="button" onclick="closeInlineCamera('register')" class="btn-primary btn-cancel-camera text-sm py-5">
+                    <i class="fas fa-times"></i> ปิดกล้อง
+                </button>
+            </div>
+            
+            <canvas id="snapshot" class="hidden"></canvas>
+
+            <div class="section-header">ข้อมูลส่วนตัว</div>
+            <div class="space-y-5 pb-20">
+                <div>
+                    <span class="text-xs text-slate-400 block mb-1 font-bold pl-2">เลขประจำตัวประชาชน 13 หลัก</span>
+                    <input type="text" id="pid" placeholder="เลขบัตรประชาชน" class="input-field" inputmode="numeric" maxlength="13" pattern="\d{13}" required>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <span class="text-xs text-slate-400 block mb-1 font-bold pl-2">ชื่อ (ไทย/อังกฤษ)</span>
+                        <input type="text" id="firstName" placeholder="ชื่อ" class="input-field" required>
+                    </div>
+                    <div>
+                        <span class="text-xs text-slate-400 block mb-1 font-bold pl-2">นามสกุล (ไทย/อังกฤษ)</span>
+                        <input type="text" id="lastName" placeholder="นามสกุล" class="input-field" required>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <span class="text-xs text-slate-400 block mb-1 font-bold pl-2">เบอร์โทรศัพท์</span>
+                        <input type="tel" id="phone" placeholder="เบอร์โทรศัพท์" class="input-field" inputmode="numeric" maxlength="10" pattern="\d{10}" required>
+                    </div>
+                    <div>
+                        <span class="text-xs text-slate-400 block mb-1 font-bold pl-2">เพศ</span>
+                        <select id="gender" class="input-field" required>
+                            <option value="">เลือกเพศ</option>
+                            <option value="ชาย">ชาย</option>
+                            <option value="หญิง">หญิง</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <span class="text-xs text-slate-400 block mb-1 font-bold pl-2">อายุ (ปี)</span>
+                        <input type="text" id="age" placeholder="อายุ" class="input-field" inputmode="numeric" maxlength="3" required>
+                    </div>
+                    <div>
+                        <span class="text-xs text-slate-400 block mb-1 font-bold pl-2">วันเดือนปีเกิด (กรอกเป็น พ.ศ.)</span>
+                        <input type="text" id="birthDate" placeholder="เช่น 19/02/2529" inputmode="numeric" class="input-field" required>
+                    </div>
+                </div>
+                
+                <div>
+                    <span class="text-xs text-slate-400 block mb-1 font-bold pl-2">อีเมล</span>
+                    <input type="email" id="email" placeholder="Email" class="input-field">
+                </div>
+                <div>
+                    <span class="text-xs text-slate-400 block mb-1 font-bold pl-2">ไลน์ไอดี</span>
+                    <input type="text" id="lineId" placeholder="LINE ID" class="input-field">
+                </div>
+                <div>
+                    <span class="text-xs text-slate-400 block mb-1 font-bold pl-2">รหัสไปรษณีย์</span>
+                    <input type="text" id="zipcode" placeholder="รหัสไปรษณีย์" class="input-field" inputmode="numeric" maxlength="5">
+                </div>
+                <div>
+                    <span class="text-xs text-slate-400 block mb-1 font-bold pl-2">ที่อยู่ตามหน้าบัตร / ที่อยู่ปัจจุบัน</span>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <input type="text" id="addressSubdistrict" placeholder="แขวง" class="input-field" list="subdistrictOptions" autocomplete="address-level3" required>
+                    <input type="text" id="addressDistrict" placeholder="เขต" class="input-field" list="districtOptions" autocomplete="address-level2" required>
+                    <input type="text" id="addressProvince" placeholder="จังหวัด" class="input-field" list="provinceOptions" autocomplete="address-level1" required>
+                </div>
+                </div>
+
+                <div class="section-header">ข้อมูลโครงการ</div>
+                <select id="jobNo" class="input-field" required><option value="">เลือก JOB NO</option></select>
+                <select id="slot" class="input-field" required>
+                    
+                    <option value="">-- เลือกรอบเวลา --</option>
+                </select>
+                <input type="text" id="rcName" placeholder="RC CODE (ถ้ามี)" class="input-field">
+                
+                <label class="flex items-start gap-4 mt-6 bg-indigo-50 border-4 border-indigo-100 rounded-3xl p-5 cursor-pointer">
+                    <input type="checkbox" id="agreeCardPhotoConsent" class="w-7 h-7 accent-indigo-600 mt-1 shrink-0">
+                    <span class="font-bold text-indigo-900 text-base leading-relaxed">
+                        ข้าพเจ้ายินยอมให้ทางบริษัทเก็บภาพถ่ายบัตรประชาชน เพื่อเป็นการยืนยันว่ามีการเข้าร่วมงานวิจัยและได้รับค่าตอบแทนในการเข้าร่วม<br>
+                        <span class="text-indigo-700">- ใช้สำหรับในการเข้าร่วมงานวิจัยเท่านั้น</span>
+                    </span>
+                </label>
+
+                <button onclick="submitRegister()" class="btn-primary mt-8">
+                    <i class="fas fa-check-circle"></i> ยืนยันลงทะเบียน
+                </button>
+            </div>
+        </div>
+
+        <!-- ================= CHECKIN VIEW ================= -->
+        <div id="checkinView" class="hidden">
+            <button onclick="stopAllStreams(); clearIdEntryState(); showView('welcomeView')" class="mb-6 text-2xl font-bold flex items-center text-slate-700">
+                <i class="fas fa-chevron-left mr-2"></i> กลับ
+            </button>
+            <h2 class="text-4xl font-bold mali-font mb-8">Check-in</h2>
+            <div class="section-header">ถ่ายภาพบัตรประชาชน</div>
+            <div class="camera-box">
+                <video id="camera2" class="hidden" autoplay playsinline muted></video>
+                <img id="cameraFilePreview2" class="hidden w-full h-full object-contain rounded-[1.3rem]" />
+                
+                <div id="cameraPlaceholder2" class="absolute inset-0 flex flex-col items-center justify-center text-slate-400">
+                    <i class="fas fa-camera text-5xl mb-2"></i>
+                    <span class="text-sm">กรุณากดเลือกปุ่มด้านล่างเพื่อถ่ายภาพหรืออัปโหลด</span>
+                </div>
+                <div id="cameraOverlayCheckin" class="camera-overlay">
+                    <div class="card-frame">
+                        
+                    </div>
+                </div>
+            </div>
+            
+            <div id="ocrStatusBadge2" class="hidden mt-3 bg-emerald-50 text-emerald-700 p-3 rounded-2xl flex items-center gap-2 font-bold text-sm border border-emerald-200">
+                <i class="fas fa-magic text-emerald-500 animate-bounce"></i>
+                <span>แนบภาพบัตรเรียบร้อยแล้ว</span>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4 mt-5">
+                <button type="button" onclick="openNativeCameraFallback('checkin')" class="btn-primary cursor-pointer select-none text-sm py-5 bg-gradient-to-r from-blue-600 to-indigo-600">
+                    <i class="fas fa-camera text-base"></i> เปิดกล้องถ่ายบัตร
+                </button>
+                <label for="galleryInputCheckin" class="btn-primary cursor-pointer select-none text-sm py-5 bg-gradient-to-r from-emerald-600 to-teal-600">
+                    <i class="fas fa-images text-base"></i> เลือกรูปจากคลังภาพ
+                </label>
+            </div>
+
+            <div id="inlineCameraActionsCheckin" class="inline-camera-actions">
+                <button type="button" onclick="captureInlineCamera('checkin')" class="btn-primary btn-capture-card text-sm py-5">
+                    <i class="fas fa-check"></i> ใช้ภาพในกรอบนี้
+                </button>
+                <button type="button" onclick="closeInlineCamera('checkin')" class="btn-primary btn-cancel-camera text-sm py-5">
+                    <i class="fas fa-times"></i> ปิดกล้อง
+                </button>
+            </div>
+            
+            <div class="mt-6">
+                <span class="text-xs text-slate-400 block mb-1 font-bold pl-2">เบอร์โทรศัพท์หลักสำหรับค้นหาคิว</span>
+                <input type="tel" id="checkinPhone" placeholder="เบอร์โทรศัพท์" class="input-field" inputmode="numeric" maxlength="10" pattern="\d{10}">
+            </div>
+            <label class="flex items-start gap-4 mt-6 bg-indigo-50 border-4 border-indigo-100 rounded-3xl p-5 cursor-pointer">
+                <input type="checkbox" id="agreeCheckinCardPhotoConsent" class="w-7 h-7 accent-indigo-600 mt-1 shrink-0">
+                <span class="font-bold text-indigo-900 text-base leading-relaxed">
+                    ข้าพเจ้ายินยอมให้ทางบริษัทเก็บภาพถ่ายบัตรประชาชน เพื่อเป็นการยืนยันว่ามีการเข้าร่วมงานวิจัยและได้รับค่าตอบแทนในการเข้าร่วม<br>
+                    <span class="text-indigo-700">- ใช้สำหรับในการเข้าร่วมงานวิจัยเท่านั้น</span>
+                </span>
+            </label>
+
+            <button onclick="submitCheckin()" class="btn-primary mt-6">ยืนยันรับคิว</button>
+        </div>
+
+        <!-- ================= SUCCESS VIEW ================= -->
+        <div id="successView" class="hidden">
+            <div class="text-center mb-6 pt-6">
+                <div class="w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-check-circle text-4xl"></i>
+                </div>
+                <h2 class="text-3xl font-black text-slate-900">สำเร็จ</h2>
+            </div>
+
+            <div class="bg-slate-50 rounded-[2rem] border p-6 space-y-4">
+                <div class="flex justify-between">
+                    <span class="text-slate-400">ชื่อ</span>
+                    <span id="successName" class="font-bold"></span>
+                </div>
+
+                <div class="flex justify-between">
+                    <span class="text-slate-400">เบอร์โทร</span>
+                    <span id="successPhone" class="font-bold"></span>
+                </div>
+
+                <div class="flex justify-between">
+                    <span class="text-slate-400">JOB NO</span>
+                    <span id="successJob" class="font-bold text-indigo-600"></span>
+                </div>
+
+                <div class="flex justify-between">
+                    <span class="text-slate-400">RC CODE</span>
+                    <span id="successRC" class="font-bold"></span>
+                </div>
+
+                <div id="queueBox" style="display:none;" class="text-center py-5 bg-white rounded-2xl">
+                    <div class="text-slate-400 text-xs uppercase tracking-widest mb-2">QUEUE</div>
+                    <div id="successQueue" class="text-6xl font-black text-indigo-600"></div>
+                </div>
+            </div>
+
+            <div class="mt-6 bg-red-50 text-red-600 p-4 rounded-2xl text-center font-bold">
+                กรุณาแคปหน้าจอนี้เพื่อยืนยัน
+            </div>
+
+            <div class="mt-6 grid grid-cols-2 gap-3">
+                <button onclick="startRegister()" class="bg-indigo-100 text-indigo-700 py-4 rounded-xl font-bold">
+                    ลงทะเบียนใหม่
+                </button>
+
+                <button onclick="clearIdEntryState(); showView('welcomeView')" class="bg-slate-800 text-white py-4 rounded-xl font-bold">
+                    กลับหน้าหลัก
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- CUSTOM TOAST: ใช้แทน popup alert -->
+<div id="customToast" class="hidden">
+    <div class="toast-box">
+        <i class="fas fa-exclamation-circle"></i>
+        <span id="toastMessage"></span>
+    </div>
+</div>
+
+
+<!-- หน้าต่างโมดัลข้อความความแจ้งเตือนที่กำหนดเอง (หลีกเลี่ยงการใช้ alert ดั้งเดิม) -->
+<div id="customAlert" class="hidden fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 transform scale-95 transition-all duration-300" id="customAlertBox">
+        <div class="text-center">
+            <div id="customAlertIcon" class="w-16 h-16 rounded-full mx-auto flex items-center justify-center mb-4"></div>
+            <h3 id="customAlertTitle" class="text-xl font-bold text-slate-900 mb-2"></h3>
+            <p id="customAlertMsg" class="text-slate-500 mb-6 text-sm leading-relaxed"></p>
+            <button onclick="closeCustomAlert()" class="w-full py-3 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 transition active:scale-95 shadow-lg shadow-indigo-100">ตกลง</button>
+        </div>
+    </div>
+</div>
+
+<script>
+
+function showToast(message) {
+    const toast = document.getElementById("customToast");
+    const text = document.getElementById("toastMessage");
+
+    if (!toast || !text) return;
+
+    text.innerText = message || "กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน";
+    toast.classList.remove("hidden");
+
+    clearTimeout(window.__idcardToastTimer);
+    window.__idcardToastTimer = setTimeout(function() {
+        toast.classList.add("hidden");
+    }, 3000);
+}
+
+let activeStream = null;
+let currentImage = "";
+let cropState = {
+    type: "",
+    image: "",
+    imgNaturalW: 0,
+    imgNaturalH: 0,
+    baseScale: 1,
+    zoom: 1,
+    x: 0,
+    y: 0,
+    dragging: false,
+    pointerId: null,
+    startX: 0,
+    startY: 0,
+    startOffsetX: 0,
+    startOffsetY: 0,
+    frameSize: 78
+};
+
+const SSC_API_URL = "https://script.google.com/macros/s/AKfycbwSfaw2bgEOciLgC6ownFi90CkENWWgjrTxBRCNlLFxEzXqNWaft87X6Etvz2xdF4d-/exec";
+
+function runSscApiFunction(name, payload) {
+    return new Promise((resolve, reject) => {
+        const requestId = "ssc-api-" + Date.now() + "-" + Math.random().toString(36).slice(2);
+        const iframeName = requestId + "-frame";
+        const iframe = document.createElement("iframe");
+        iframe.name = iframeName;
+        iframe.style.display = "none";
+
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = SSC_API_URL;
+        form.target = iframeName;
+        form.style.display = "none";
+
+        function addInput(key, value) {
+            const input = document.createElement("input");
+            input.type = "hidden";
+            input.name = key;
+            input.value = value == null ? "" : String(value);
+            form.appendChild(input);
+        }
+
+        const timer = setTimeout(() => {
+            cleanup();
+            reject(new Error("เชื่อมต่อหลังบ้านไม่สำเร็จ กรุณาลองใหม่"));
+        }, 60000);
+
+        function cleanup() {
+            clearTimeout(timer);
+            window.removeEventListener("message", onMessage);
+            if (form.parentNode) form.parentNode.removeChild(form);
+            if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
+        }
+
+        function onMessage(event) {
+            const data = event && event.data;
+            if (!data || !data.__sscApiResponse || data.requestId !== requestId) return;
+            cleanup();
+            if (data.ok) {
+                resolve(data.result);
+            } else {
+                const message = data.error && data.error.message ? data.error.message : "หลังบ้านทำงานไม่สำเร็จ";
+                reject(new Error(message));
+            }
+        }
+
+        window.addEventListener("message", onMessage);
+        addInput("requestId", requestId);
+        addInput("fn", name);
+        addInput("payload", JSON.stringify(payload == null ? null : payload));
+        document.body.appendChild(iframe);
+        document.body.appendChild(form);
+        form.submit();
+    });
+}
+window.onload = () => {
+    // 1. ตรวจสอบว่าเว็บถูกเปิดขึ้นมาจาก LINE หรือ Facebook หรือไม่
+    const ua = navigator.userAgent || navigator.vendor || window.opera;
+    const isLine = (ua.indexOf("Line") > -1);
+    const isFB = (ua.indexOf("FBAN") > -1) || (ua.indexOf("FBAV") > -1);
+    const isMessenger = (ua.indexOf("Messenger") > -1);
+    
+    if (isLine || isFB || isMessenger) {
+        const banner = document.getElementById('browserWarningBanner');
+        if (banner) banner.classList.remove('hidden');
+    }
+
+    setupDigitLimit('pid', 13);
+    setupDigitLimit('phone', 10);
+    setupDigitLimit('checkinPhone', 10);
+    setupCropControls_();
+    resetIdCardFrozenState_();
+
+    runGoogleFunction("getSetupList")
+        .then(loadJobs)
+        .catch(function(err){
+            loadJobs([]);
+            showAlert('โหลดรายการงานไม่สำเร็จ', (err && err.message) ? err.message : 'กรุณารีเฟรชหน้าอีกครั้ง', 'warning');
+        });
+};
+
+function resetIdCardFrozenState_(){
+    try{
+        const loading = document.getElementById('loading');
+        if (loading) loading.style.display = 'none';
+        stopAllStreams();
+        ['inlineCameraActionsRegister','inlineCameraActionsCheckin'].forEach(function(id){
+            const el = document.getElementById(id);
+            if (el) el.classList.remove('active');
+        });
+    }catch(err){}
+}
+
+window.addEventListener('pageshow', resetIdCardFrozenState_);
+window.addEventListener('pagehide', function(){ try{ stopAllStreams(); }catch(err){} });
+window.addEventListener('beforeunload', function(){ try{ stopAllStreams(); }catch(err){} });
+
+// ฟังก์ชันเปิดแจ้งเตือนสไตล์โมเดิร์น
+function showAlert(title, message, type = 'success') {
+    showToast(message || title || "กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน");
+}
+
+function closeCustomAlert() {
+    const modal = document.getElementById('customAlert');
+    modal.classList.add('hidden');
+}
+
+function keepOnlyDigits(id, maxLength) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.value = String(el.value || '').replace(/\D/g, '').slice(0, maxLength);
+}
+
+function setupDigitLimit(id, maxLength) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', function() {
+        keepOnlyDigits(id, maxLength);
+    });
+}
+
+
+function buildSlotOptionsFromRange(rangeText) {
+    const text = String(rangeText || '').trim();
+    const m = text.match(/(\d{1,2})[:.](\d{2})\s*-\s*(\d{1,2})[:.](\d{2})/);
+    if (!m) return [];
+
+    const startHour = Number(m[1]);
+    const endHour = Number(m[3]);
+    if (isNaN(startHour) || isNaN(endHour) || startHour > endHour) return [];
+
+    const list = [];
+    for (let h = startHour; h <= endHour; h++) {
+        list.push(String(h).padStart(2, '0') + ':00');
+    }
+    return list;
+}
+
+function setSlotOptionsFromJob(job) {
+    const slot = document.getElementById('slot');
+    if (!slot) return;
+
+    const slots = (job && Array.isArray(job.slots) && job.slots.length)
+        ? job.slots
+        : buildSlotOptionsFromRange(job && job.timeRange ? job.timeRange : '');
+
+    slot.innerHTML = '';
+
+    if (!job) {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = '-- เลือกงานก่อน --';
+        slot.appendChild(opt);
+        return;
+    }
+
+    if (!slots.length) {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = '-- ไม่พบรอบเวลาใน SETUP --';
+        slot.appendChild(opt);
+        return;
+    }
+
+    slots.forEach(function(t) {
+        const opt = document.createElement('option');
+        opt.value = t;
+        opt.textContent = t;
+        slot.appendChild(opt);
+    });
+}
+
+function findSelectedSetupJob() {
+    const jobNo = document.getElementById('jobNo') ? document.getElementById('jobNo').value : '';
+    return (window.setupJobList || window.jobList || []).find(function(j) {
+        return String(j.jobNo || '').trim() === String(jobNo || '').trim();
+    });
+}
+
+function applySelectedSetupJob() {
+    const job = findSelectedSetupJob();
+    setSlotOptionsFromJob(job);
+}
+
+function loadJobs(res) {
+    window.setupJobList = Array.isArray(res) ? res : [];
+    const select = document.getElementById("jobNo");
+    select.innerHTML = "<option value=''>เลือก JOB NO</option>";
+    if(res) {
+        res.forEach(item => {
+            let opt = document.createElement("option");
+            opt.value = item.jobNo;
+            opt.text = item.jobNo + (item.jobName ? " - " + item.jobName : "");
+            select.add(opt);
+        });
+    }
+    select.onchange = applySelectedSetupJob;
+    setSlotOptionsFromJob(null);
+}
+
+function showView(id) {
+    const views = ['welcomeView', 'registerView', 'checkinView', 'successView'];
+    views.forEach(v => document.getElementById(v).classList.add('hidden'));
+    document.getElementById(id).classList.remove('hidden');
+    window.scrollTo(0, 0);
+}
+
+function clearSuccessView() {
+    ['successName', 'successPhone', 'successJob', 'successRC', 'successQueue'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = "";
+    });
+    const queueBox = document.getElementById('queueBox');
+    if (queueBox) queueBox.style.display = "none";
+}
+
+function clearIdEntryState() {
+    currentImage = "";
+    ['cameraInputRegister', 'galleryInputRegister', 'cameraInputCheckin', 'galleryInputCheckin'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = "";
+    });
+    ['cameraFilePreview', 'cameraFilePreview2'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.classList.add('hidden');
+            el.removeAttribute('src');
+        }
+    });
+    ['ocrStatusBadge', 'ocrStatusBadge2'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+    });
+    clearSuccessView();
+}
+
+function startRegister() { 
+    clearIdEntryState();
+    document.getElementById('cameraFilePreview').classList.add('hidden');
+    document.getElementById('cameraFilePreview').removeAttribute('src');
+    document.getElementById('cameraPlaceholder').classList.remove('hidden');
+    document.getElementById('cameraOverlayRegister').classList.remove('hidden');
+    document.getElementById('ocrStatusBadge').classList.add('hidden');
+    
+    // ล้างข้อมูลฟิลด์สำหรับลงทะเบียนใหม่
+    const fieldsToClear = ['pid', 'firstName', 'lastName', 'phone', 'age', 'birthDate', 'email', 'lineId', 'zipcode', 'addressSubdistrict', 'addressDistrict', 'addressProvince', 'rcName'];
+    fieldsToClear.forEach(id => {
+        const el = document.getElementById(id);
+        if(el) {
+            el.value = "";
+            el.classList.remove('input-autofilled');
+        }
+    });
+    document.getElementById('gender').value = "";
+    document.getElementById('gender').classList.remove('input-autofilled');
+    ['jobNo', 'slot'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.selectedIndex = 0;
+    });
+    if (document.getElementById('agreeCondition')) document.getElementById('agreeCondition').checked = false;
+    
+    if (document.getElementById('agreeCardPhotoConsent')) document.getElementById('agreeCardPhotoConsent').checked = false;
+        showView('registerView'); 
+}
+
+function startCheckin() { 
+    clearIdEntryState();
+    document.getElementById('cameraFilePreview2').classList.add('hidden');
+    document.getElementById('cameraFilePreview2').removeAttribute('src');
+    document.getElementById('cameraPlaceholder2').classList.remove('hidden');
+    document.getElementById('cameraOverlayCheckin').classList.remove('hidden');
+    document.getElementById('ocrStatusBadge2').classList.add('hidden');
+    document.getElementById('checkinPhone').value = "";
+    document.getElementById('checkinPhone').classList.remove('input-autofilled');
+    if (document.getElementById('agreeCheckinCardPhotoConsent')) document.getElementById('agreeCheckinCardPhotoConsent').checked = false;
+    showView('checkinView'); 
+}
+
+async function stopAllStreams() {
+    if (activeStream) {
+        activeStream.getTracks().forEach(track => track.stop());
+        activeStream = null;
+    }
+}
+
+function resizeImageForFastOCR(file) {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+            const img = new Image();
+
+            img.onload = function() {
+                const sourceW = img.naturalWidth || img.width;
+                const sourceH = img.naturalHeight || img.height;
+
+                // ลดขนาดรูปจากกล้องมือถือก่อน OCR เพื่อไม่ให้ประมวลผลช้าเกินไป
+                const maxSide = 2400;
+                const ratio = Math.min(1, maxSide / Math.max(sourceW, sourceH));
+                const targetW = Math.round(sourceW * ratio);
+                const targetH = Math.round(sourceH * ratio);
+
+                const canvas = document.createElement('canvas');
+                canvas.width = targetW;
+                canvas.height = targetH;
+
+                const ctx = canvas.getContext('2d');
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+                ctx.drawImage(img, 0, 0, targetW, targetH);
+
+                resolve(canvas.toDataURL('image/jpeg', 0.94));
+            };
+
+            img.onerror = function() {
+                resolve(e.target.result);
+            };
+
+            img.src = e.target.result;
+        };
+
+        reader.onerror = function() {
+            resolve("");
+        };
+
+        reader.readAsDataURL(file);
+    });
+}
+
+async function handleFileCapture(input, type) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const originalImage = await resizeImageForFastOCR(file);
+
+        if (!originalImage) {
+            showAlert('โหลดรูปไม่สำเร็จ', 'ไม่สามารถโหลดรูปภาพได้ กรุณาลองถ่ายหรือเลือกรูปใหม่อีกครั้ง', 'warning');
+            return;
+        }
+
+        openCropImage(originalImage, type);
+    }
+}
+
+
+async function openInlineCamera(type) {
+    try {
+        await stopAllStreams();
+
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            showAlert('เปิดกล้องในหน้าเว็บไม่ได้', 'Browser นี้ไม่รองรับ live camera ในหน้าเว็บ กรุณาใช้เมนูเลือกรูปจากคลังภาพแทน', 'warning');
+            return;
+        }
+
+        const videoId = type === 'register' ? 'camera' : 'camera2';
+        const previewId = type === 'register' ? 'cameraFilePreview' : 'cameraFilePreview2';
+        const placeholderId = type === 'register' ? 'cameraPlaceholder' : 'cameraPlaceholder2';
+        const overlayId = type === 'register' ? 'cameraOverlayRegister' : 'cameraOverlayCheckin';
+        const actionId = type === 'register' ? 'inlineCameraActionsRegister' : 'inlineCameraActionsCheckin';
+
+        const stream = await getBestCameraStream_();
+
+        activeStream = stream;
+
+        const video = document.getElementById(videoId);
+        video.srcObject = stream;
+        video.classList.remove('hidden');
+        try {
+            await video.play();
+        } catch (err) {}
+
+        document.getElementById(previewId).classList.add('hidden');
+        document.getElementById(placeholderId).classList.add('hidden');
+        document.getElementById(overlayId).classList.remove('hidden');
+        document.getElementById(actionId).classList.add('active');
+
+    } catch (err) {
+        const message =
+            err && err.name
+                ? err.name + ': ' + (err.message || 'ไม่สามารถเปิดกล้องได้')
+                : 'กรุณาอนุญาตกล้อง หรือใช้เมนูเลือกรูปจากคลังภาพแทน';
+        showAlert('เปิดกล้องในหน้าเว็บไม่ได้', message, 'warning');
+    }
+}
+
+async function getBestCameraStream_() {
+    const attempts = [
+        {
+            video: {
+                facingMode: { exact: 'environment' },
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            },
+            audio: false
+        },
+        {
+            video: {
+                facingMode: { ideal: 'environment' },
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            },
+            audio: false
+        },
+        {
+            video: {
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            },
+            audio: false
+        },
+        {
+            video: true,
+            audio: false
+        }
+    ];
+
+    let lastError = null;
+    for (let i = 0; i < attempts.length; i++) {
+        try {
+            return await navigator.mediaDevices.getUserMedia(attempts[i]);
+        } catch (err) {
+            lastError = err;
+        }
+    }
+
+    throw lastError || new Error('Camera unavailable');
+}
+
+function openNativeCameraFallback(type) {
+    const inputId = type === 'register' ? 'cameraInputRegister' : 'cameraInputCheckin';
+    const input = document.getElementById(inputId);
+
+    if (input) {
+        input.value = "";
+        input.click();
+        return;
+    }
+
+    showAlert('เปิดกล้องไม่ได้', 'กรุณาอนุญาตกล้อง หรือใช้เมนูเลือกรูปจากคลังภาพแทน', 'warning');
+}
+
+async function captureInlineCamera(type) {
+    const videoId = type === 'register' ? 'camera' : 'camera2';
+    const previewId = type === 'register' ? 'cameraFilePreview' : 'cameraFilePreview2';
+    const placeholderId = type === 'register' ? 'cameraPlaceholder' : 'cameraPlaceholder2';
+    const overlayId = type === 'register' ? 'cameraOverlayRegister' : 'cameraOverlayCheckin';
+    const actionId = type === 'register' ? 'inlineCameraActionsRegister' : 'inlineCameraActionsCheckin';
+
+    const video = document.getElementById(videoId);
+
+    if (!video || !video.videoWidth || !video.videoHeight) {
+        showAlert('ยังจับภาพไม่ได้', 'กรุณารอสักครู่ให้กล้องแสดงภาพก่อน', 'warning');
+        return;
+    }
+
+    const framedImage = captureVideoCardFrame_(video, overlayId);
+    currentImage = framedImage ? await addIdCardWatermark_(framedImage) : "";
+
+    if (!currentImage) {
+        showAlert('จับภาพในกรอบไม่ได้', 'กรุณาลองเปิดกล้องใหม่อีกครั้ง', 'warning');
+        return;
+    }
+
+    const preview = document.getElementById(previewId);
+    preview.src = currentImage;
+    preview.classList.remove('hidden');
+
+    video.classList.add('hidden');
+    document.getElementById(placeholderId).classList.add('hidden');
+    document.getElementById(overlayId).classList.add('hidden');
+    document.getElementById(actionId).classList.remove('active');
+
+    await stopAllStreams();
+
+    if (type === 'register') {
+        markCardImageReady('register');
+    } else {
+        markCardImageReady('checkin');
+    }
+}
+
+function openCropImage(imageBase64, type) {
+    const modal = document.getElementById('cropModal');
+    const img = document.getElementById('cropImage');
+    const zoom = document.getElementById('cropZoom');
+    const frameSize = document.getElementById('cropFrameSize');
+
+    cropState.type = type;
+    cropState.image = imageBase64 || "";
+    cropState.zoom = 1;
+    cropState.frameSize = 78;
+    cropState.x = 0;
+    cropState.y = 0;
+    cropState.dragging = false;
+    cropState.pointerId = null;
+
+    zoom.value = "1";
+    frameSize.value = "78";
+    modal.classList.add('active');
+    img.removeAttribute('src');
+    img.style.transform = 'translate(-50%, -50%) scale(1)';
+    img.style.width = '1px';
+    img.style.height = '1px';
+
+    img.onload = function() {
+        cropState.imgNaturalW = img.naturalWidth || img.width;
+        cropState.imgNaturalH = img.naturalHeight || img.height;
+        requestAnimationFrame(function() {
+            resetCropToFit_();
+        });
+    };
+    img.src = imageBase64;
+    requestAnimationFrame(updateCropFrameSize_);
+}
+
+function resetCropToFit_() {
+    const img = document.getElementById('cropImage');
+    const frame = document.querySelector('#cropModal .crop-frame');
+    if (!img || !frame || !cropState.imgNaturalW || !cropState.imgNaturalH) return;
+
+    const frameRect = frame.getBoundingClientRect();
+    const stage = document.getElementById('cropStage');
+    const stageRect = stage ? stage.getBoundingClientRect() : frameRect;
+    const fitFrameScale = Math.max(frameRect.width / cropState.imgNaturalW, frameRect.height / cropState.imgNaturalH);
+    const fitStageScale = Math.min(stageRect.width / cropState.imgNaturalW, stageRect.height / cropState.imgNaturalH);
+    cropState.baseScale = Math.max(fitFrameScale, fitStageScale || fitFrameScale);
+    cropState.zoom = 1;
+    cropState.x = 0;
+    cropState.y = 0;
+    document.getElementById('cropZoom').value = "1";
+    updateCropTransform_();
+}
+
+function updateCropFrameSize_() {
+    const stage = document.getElementById('cropStage');
+    const frame = document.querySelector('#cropModal .crop-frame');
+    if (!stage || !frame) return;
+
+    const stageRect = stage.getBoundingClientRect();
+    const pct = Math.max(45, Math.min(96, Number(cropState.frameSize || 78)));
+    const maxWidth = Math.max(220, stageRect.width - 24);
+    const width = Math.max(180, Math.round(maxWidth * pct / 100));
+    frame.style.setProperty('--crop-frame-width', width + 'px');
+}
+
+function updateCropTransform_() {
+    const img = document.getElementById('cropImage');
+    if (!img) return;
+
+    const scale = cropState.baseScale * cropState.zoom;
+    img.style.width = cropState.imgNaturalW + 'px';
+    img.style.height = cropState.imgNaturalH + 'px';
+    img.style.transform =
+        'translate(calc(-50% + ' + cropState.x + 'px), calc(-50% + ' + cropState.y + 'px)) scale(' + scale + ')';
+}
+
+function getCropRelativeSource_() {
+    const img = document.getElementById('cropImage');
+    const frame = document.querySelector('#cropModal .crop-frame');
+    if (!img || !frame) return null;
+
+    const imgRect = img.getBoundingClientRect();
+    const frameRect = frame.getBoundingClientRect();
+    const scaleX = cropState.imgNaturalW / imgRect.width;
+    const scaleY = cropState.imgNaturalH / imgRect.height;
+
+    return {
+        sx: Math.max(0, Math.round((frameRect.left - imgRect.left) * scaleX)),
+        sy: Math.max(0, Math.round((frameRect.top - imgRect.top) * scaleY)),
+        sw: Math.min(cropState.imgNaturalW, Math.round(frameRect.width * scaleX)),
+        sh: Math.min(cropState.imgNaturalH, Math.round(frameRect.height * scaleY))
+    };
+}
+
+function drawRoundedRect_(ctx, x, y, width, height, radius) {
+    const r = Math.min(radius, width / 2, height / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + width - r, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+    ctx.lineTo(x + width, y + height - r);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+    ctx.lineTo(x + r, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+}
+
+function addIdCardWatermark_(imageBase64) {
+    return new Promise((resolve) => {
+        if (!imageBase64 || String(imageBase64).indexOf('base64,') < 0) {
+            resolve(imageBase64);
+            return;
+        }
+
+        const img = new Image();
+        img.onload = function() {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.naturalWidth || img.width;
+            canvas.height = img.naturalHeight || img.height;
+
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+            const boxW = canvas.width * 0.38;
+            const boxH = canvas.height * 0.18;
+            const centerX = canvas.width * 0.72;
+            const centerY = canvas.height * 0.48;
+            const radius = Math.max(14, canvas.width * 0.02);
+            const fontSize = Math.max(22, Math.round(canvas.width * 0.031));
+            const lines = [
+                'สำเนาถูกต้อง',
+                'ใช้เพื่อรับค่าตอบแทนในงานวิจัย',
+                'บริษัท อินเทจ เท่านั้น'
+            ];
+
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.rotate(-Math.PI / 5.9);
+            ctx.strokeStyle = 'rgba(30, 64, 175, 0.95)';
+            ctx.lineWidth = Math.max(2, canvas.width * 0.003);
+            drawRoundedRect_(ctx, -boxW / 2, -boxH / 2, boxW, boxH, radius);
+            ctx.stroke();
+
+            ctx.fillStyle = '#ff0000';
+            ctx.font = '800 ' + fontSize + 'px Kanit, Arial, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            const lineHeight = fontSize * 1.12;
+            const startY = -lineHeight;
+            lines.forEach(function(line, index) {
+                ctx.fillText(line, 0, startY + (index * lineHeight));
+            });
+            ctx.restore();
+
+            resolve(canvas.toDataURL('image/jpeg', 0.92));
+        };
+        img.onerror = function() {
+            resolve(imageBase64);
+        };
+        img.src = imageBase64;
+    });
+}
+
+async function confirmCropImage() {
+    const img = document.getElementById('cropImage');
+    const source = getCropRelativeSource_();
+    if (!img || !source || !source.sw || !source.sh) {
+        showAlert('ครอปรูปไม่ได้', 'กรุณาลองจัดกรอบใหม่อีกครั้ง', 'warning');
+        return;
+    }
+
+    const canvasW = 1200;
+    const canvasH = Math.round(canvasW / 1.58);
+    const canvas = document.createElement('canvas');
+    canvas.width = canvasW;
+    canvas.height = canvasH;
+
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(img, source.sx, source.sy, source.sw, source.sh, 0, 0, canvas.width, canvas.height);
+
+    currentImage = await addIdCardWatermark_(canvas.toDataURL('image/jpeg', 0.92));
+    document.getElementById('cropModal').classList.remove('active');
+    applyCroppedImageToView_(cropState.type, currentImage);
+}
+
+function cancelCropImage() {
+    document.getElementById('cropModal').classList.remove('active');
+    cropState.image = "";
+    cropState.type = "";
+}
+
+function applyCroppedImageToView_(type, imageBase64) {
+    if (type === 'register') {
+        document.getElementById('camera').classList.add('hidden');
+        document.getElementById('cameraPlaceholder').classList.add('hidden');
+        document.getElementById('cameraOverlayRegister').classList.add('hidden');
+
+        const previewInBox = document.getElementById('cameraFilePreview');
+        previewInBox.src = imageBase64;
+        previewInBox.classList.remove('hidden');
+        markCardImageReady('register');
+        return;
+    }
+
+    if (type === 'checkin') {
+        document.getElementById('camera2').classList.add('hidden');
+        document.getElementById('cameraPlaceholder2').classList.add('hidden');
+        document.getElementById('cameraOverlayCheckin').classList.add('hidden');
+
+        const previewInBox2 = document.getElementById('cameraFilePreview2');
+        previewInBox2.src = imageBase64;
+        previewInBox2.classList.remove('hidden');
+        markCardImageReady('checkin');
+    }
+}
+
+function setupCropControls_() {
+    const stage = document.getElementById('cropStage');
+    const zoom = document.getElementById('cropZoom');
+    const frameSize = document.getElementById('cropFrameSize');
+    if (!stage || !zoom || !frameSize) return;
+
+    zoom.addEventListener('input', function() {
+        cropState.zoom = Number(this.value || 1);
+        updateCropTransform_();
+    });
+
+    frameSize.addEventListener('input', function() {
+        cropState.frameSize = Number(this.value || 78);
+        updateCropFrameSize_();
+    });
+
+    window.addEventListener('resize', function() {
+        if (document.getElementById('cropModal').classList.contains('active')) {
+            updateCropFrameSize_();
+            resetCropToFit_();
+        }
+    });
+
+    stage.addEventListener('pointerdown', function(event) {
+        cropState.dragging = true;
+        cropState.pointerId = event.pointerId;
+        cropState.startX = event.clientX;
+        cropState.startY = event.clientY;
+        cropState.startOffsetX = cropState.x;
+        cropState.startOffsetY = cropState.y;
+        stage.setPointerCapture(event.pointerId);
+    });
+
+    stage.addEventListener('pointermove', function(event) {
+        if (!cropState.dragging || cropState.pointerId !== event.pointerId) return;
+        cropState.x = cropState.startOffsetX + (event.clientX - cropState.startX);
+        cropState.y = cropState.startOffsetY + (event.clientY - cropState.startY);
+        updateCropTransform_();
+    });
+
+    function stopDrag(event) {
+        if (cropState.pointerId === event.pointerId) {
+            cropState.dragging = false;
+            cropState.pointerId = null;
+        }
+    }
+
+    stage.addEventListener('pointerup', stopDrag);
+    stage.addEventListener('pointercancel', stopDrag);
+}
+
+function captureVideoCardFrame_(video, overlayId) {
+    const overlay = document.getElementById(overlayId);
+    const frame = overlay ? overlay.querySelector('.card-frame') : null;
+
+    if (!video || !frame || !video.videoWidth || !video.videoHeight) {
+        return "";
+    }
+
+    const videoRect = video.getBoundingClientRect();
+    const frameRect = frame.getBoundingClientRect();
+
+    const sourceRatio = video.videoWidth / video.videoHeight;
+    const displayRatio = videoRect.width / videoRect.height;
+    let visibleW = video.videoWidth;
+    let visibleH = video.videoHeight;
+    let visibleX = 0;
+    let visibleY = 0;
+
+    if (sourceRatio > displayRatio) {
+        visibleH = video.videoHeight;
+        visibleW = visibleH * displayRatio;
+        visibleX = (video.videoWidth - visibleW) / 2;
+    } else {
+        visibleW = video.videoWidth;
+        visibleH = visibleW / displayRatio;
+        visibleY = (video.videoHeight - visibleH) / 2;
+    }
+
+    const relX = (frameRect.left - videoRect.left) / videoRect.width;
+    const relY = (frameRect.top - videoRect.top) / videoRect.height;
+    const relW = frameRect.width / videoRect.width;
+    const relH = frameRect.height / videoRect.height;
+
+    const sx = Math.max(0, Math.round(visibleX + relX * visibleW));
+    const sy = Math.max(0, Math.round(visibleY + relY * visibleH));
+    const sw = Math.min(video.videoWidth - sx, Math.round(relW * visibleW));
+    const sh = Math.min(video.videoHeight - sy, Math.round(relH * visibleH));
+
+    const targetW = 1200;
+    const targetH = Math.round(targetW / 1.58);
+    const canvas = document.createElement('canvas');
+    canvas.width = targetW;
+    canvas.height = targetH;
+
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+
+    return canvas.toDataURL('image/jpeg', 0.92);
+}
+
+async function closeInlineCamera(type) {
+    await stopAllStreams();
+
+    const videoId = type === 'register' ? 'camera' : 'camera2';
+    const placeholderId = type === 'register' ? 'cameraPlaceholder' : 'cameraPlaceholder2';
+    const overlayId = type === 'register' ? 'cameraOverlayRegister' : 'cameraOverlayCheckin';
+    const actionId = type === 'register' ? 'inlineCameraActionsRegister' : 'inlineCameraActionsCheckin';
+
+    document.getElementById(videoId).classList.add('hidden');
+    document.getElementById(placeholderId).classList.remove('hidden');
+    document.getElementById(overlayId).classList.remove('hidden');
+    document.getElementById(actionId).classList.remove('active');
+}
+
+
+
+function markCardImageReady(type) {
+    // ปิด OCR / Auto-fill ทั้งหมด
+    // หลังถ่ายหรือเลือกรูป ให้แค่แสดงสถานะแนบภาพแล้ว
+    // ข้อมูลทุกช่องให้ผู้ใช้กรอกเอง
+    if (type === 'register') {
+        const badge = document.getElementById('ocrStatusBadge');
+        if (badge) badge.classList.remove('hidden');
+    }
+
+    if (type === 'checkin') {
+        const badge = document.getElementById('ocrStatusBadge2');
+        if (badge) badge.classList.remove('hidden');
+    }
+}
+
+
+function safeSetValue(id, value) {
+    const el = document.getElementById(id);
+    if (!el || value === undefined || value === null || String(value).trim() === "") return;
+    el.value = String(value).trim();
+    if (id === 'pid') keepOnlyDigits(id, 13);
+    if (id === 'phone' || id === 'checkinPhone') keepOnlyDigits(id, 10);
+    el.classList.add('input-autofilled');
+}
+
+function normalizeThaiDigits(text) {
+    return String(text || '')
+        .replace(/[๐]/g, '0')
+        .replace(/[๑]/g, '1')
+        .replace(/[๒]/g, '2')
+        .replace(/[๓]/g, '3')
+        .replace(/[๔]/g, '4')
+        .replace(/[๕]/g, '5')
+        .replace(/[๖]/g, '6')
+        .replace(/[๗]/g, '7')
+        .replace(/[๘]/g, '8')
+        .replace(/[๙]/g, '9')
+        .replace(/[Oo]/g, '0')
+        .replace(/[Il|]/g, '1');
+}
+
+function normalizeOCRText(text) {
+    return normalizeThaiDigits(text)
+        .replace(/\r/g, '\n')
+        .replace(/[\t]+/g, ' ')
+        .replace(/[ ]{2,}/g, ' ')
+        .replace(/\n{2,}/g, '\n')
+        .trim();
+}
+
+function isValidThaiPID(pid) {
+    pid = String(pid || '').replace(/\D/g, '');
+    if (!/^\d{13}$/.test(pid)) return false;
+    if (/^(\d)\1{12}$/.test(pid)) return false;
+    let sum = 0;
+    for (let i = 0; i < 12; i++) sum += Number(pid[i]) * (13 - i);
+    const check = (11 - (sum % 11)) % 10;
+    return check === Number(pid[12]);
+}
+
+function extractThaiPID(rawText) {
+    const text = normalizeThaiDigits(rawText);
+    if (!text) return "";
+
+    const candidates = [];
+
+    // ให้คะแนนเลขที่อยู่ใกล้ keyword เลขบัตรก่อน
+    const lines = text
+        .split(/\n/)
+        .map(line => line.replace(/\s+/g, ' ').trim())
+        .filter(Boolean);
+
+    lines.forEach((line, idx) => {
+        const nearby = [
+            lines[idx - 1] || "",
+            line || "",
+            lines[idx + 1] || ""
+        ].join(" ");
+
+        const weight =
+            /Identification|Personal|Number|เลขประจำตัว|บัตรประชาชน|ID\s*Card/i.test(nearby)
+                ? 10
+                : 1;
+
+        const looseMatches = nearby.match(/(?:\d[\s\-]*){13}/g) || [];
+        looseMatches.forEach(m => {
+            const pid = m.replace(/\D/g, '');
+            if (pid.length === 13) {
+                candidates.push({ pid, weight });
+            }
+        });
+    });
+
+    // รองรับ OCR ที่อ่านเลขติดกันยาวกว่า 13 หลัก
+    const longMatches = text.match(/\d{13,}/g) || [];
+    longMatches.forEach(num => {
+        for (let i = 0; i <= num.length - 13; i++) {
+            candidates.push({ pid: num.slice(i, i + 13), weight: 1 });
+        }
+    });
+
+    if (candidates.length === 0) return "";
+
+    // ตัดเลขซ้ำ / เลขซ้ำทั้งชุด / เบอร์โทร
+    const uniqueMap = {};
+    candidates.forEach(item => {
+        if (!/^\d{13}$/.test(item.pid)) return;
+        if (/^(\d)\1{12}$/.test(item.pid)) return;
+        uniqueMap[item.pid] = Math.max(uniqueMap[item.pid] || 0, item.weight || 1);
+    });
+
+    const unique = Object.keys(uniqueMap)
+        .map(pid => ({ pid, weight: uniqueMap[pid] }))
+        .sort((a, b) => b.weight - a.weight);
+
+    // สำคัญ: เติมเฉพาะเลขที่ผ่าน check digit เท่านั้น
+    // ถ้า OCR อ่านผิด 1 ตัว จะไม่เอาเลขผิดไปกรอกให้
+    const valid = unique.find(item => isValidThaiPID(item.pid));
+    return valid ? valid.pid : "";
+}
+
+
+function preprocessImageForOCR(imageBase64) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+            const sourceW = img.naturalWidth || img.width;
+            const sourceH = img.naturalHeight || img.height;
+
+            // ปรับขนาดภาพก่อน OCR ให้พอดี ไม่ขยายภาพกล้องมือถือขนาดใหญ่จนช้า
+            const maxSide = 2400;
+            const scale = Math.min(1.6, Math.max(0.6, maxSide / Math.max(sourceW, sourceH)));
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.round(sourceW * scale);
+            canvas.height = Math.round(sourceH * scale);
+            const ctx = canvas.getContext('2d');
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+            for (let i = 0; i < data.length; i += 4) {
+                const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+                // เพิ่ม contrast แบบอ่อน ๆ เพื่อช่วย Tesseract แต่ไม่ทำลายตัวอักษรไทย
+                const boosted = gray < 145 ? Math.max(0, gray - 25) : Math.min(255, gray + 20);
+                data[i] = data[i + 1] = data[i + 2] = boosted;
+            }
+            ctx.putImageData(imageData, 0, 0);
+            resolve(canvas.toDataURL('image/jpeg', 0.95));
+        };
+        img.onerror = () => resolve(imageBase64);
+        img.src = imageBase64;
+    });
+}
+
+async function cropImageToCardFrame(imageBase64) {
+    return new Promise((resolve) => {
+        const img = new Image();
+
+        img.onload = () => {
+            const sourceW = img.naturalWidth || img.width;
+            const sourceH = img.naturalHeight || img.height;
+            const ratio = sourceW / sourceH;
+            const targetRatio = 1.58;
+
+            // ปรับเฉพาะการครอปรูปบัตร:
+            // ให้บัตรเต็มกรอบมากขึ้น โดยตัดขอบนอกเล็กน้อย
+            // และยังคงสัดส่วนบัตรประชาชน 1.58 สำหรับเอาไปใช้ในใบยินยอม
+            let sx = 0;
+            let sy = 0;
+            let cropW = sourceW;
+            let cropH = sourceH;
+
+            if (ratio > targetRatio) {
+                cropH = sourceH;
+                cropW = Math.round(cropH * targetRatio);
+                sx = Math.round((sourceW - cropW) / 2);
+                sy = 0;
+            } else if (ratio < targetRatio) {
+                cropW = sourceW;
+                cropH = Math.round(cropW / targetRatio);
+
+                if (cropH > sourceH) {
+                    cropH = sourceH;
+                    cropW = Math.round(cropH * targetRatio);
+                    sx = Math.round((sourceW - cropW) / 2);
+                    sy = 0;
+                } else {
+                    sx = 0;
+                    sy = Math.round((sourceH - cropH) * 0.52);
+                }
+            }
+
+            // ไม่ตัดขอบเพิ่ม
+            // เพื่อให้เห็นมุมบัตรครบทั้ง 4 ด้านตามภาพต้นฉบับ
+            sx = Math.max(0, Math.min(sx, sourceW - cropW));
+            sy = Math.max(0, Math.min(sy, sourceH - cropH));
+
+            const canvasW = 900;
+            const canvasH = Math.round(canvasW / targetRatio);
+
+            const canvas = document.createElement('canvas');
+            canvas.width = canvasW;
+            canvas.height = canvasH;
+
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+
+            ctx.drawImage(
+                img,
+                sx,
+                sy,
+                cropW,
+                cropH,
+                0,
+                0,
+                canvas.width,
+                canvas.height
+            );
+
+            resolve(canvas.toDataURL('image/jpeg', 0.82));
+        };
+
+        img.onerror = () => resolve(imageBase64);
+        img.src = imageBase64;
+    });
+}
+
+
+
+function cleanPersonName(value) {
+    return String(value || '')
+        .replace(/บัตรประจำตัวประชาชน|Thai National ID Card|Identification Number|เลขประจำตัวประชาชน/gi, '')
+        .replace(/Name|Last name|Lastname|Surname|ชื่อตัวและชื่อสกุล|เกิดวันที่|Date of Birth/gi, '')
+        .replace(/[0-9]/g, '')
+        .replace(/[.:;,_|]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function extractNameFromOCR(text) {
+    const clean = normalizeOCRText(text);
+    const lines = clean
+        .split('\n')
+        .map(line => line.replace(/\s+/g, ' ').trim())
+        .filter(Boolean);
+
+    let firstName = "";
+    let lastName = "";
+    let gender = "";
+
+    // ไทย: มักอยู่หลังคำว่า ชื่อตัวและชื่อสกุล เช่น นาย คฤณัฐ ภูศิริ
+    const thaiNameMatch = clean.match(/(?:ชื่อตัวและชื่อสกุล|ชือ่ตัวและชื่อสกุล|ชื่อและชื่อสกุล|ชื่อตัว.*?สกุล)\s*(นาย|นางสาว|นาง)?\s*([ก-๙]{2,})\s+([ก-๙]{2,})/);
+    if (thaiNameMatch) {
+        const title = thaiNameMatch[1] || '';
+        firstName = cleanPersonName(thaiNameMatch[2]);
+        lastName = cleanPersonName(thaiNameMatch[3]);
+        if (title === 'นาย') gender = 'ชาย';
+        if (title === 'นาง' || title === 'นางสาว') gender = 'หญิง';
+    }
+
+    // fallback ไทย: หา line ที่มีคำนำหน้าและมีชื่อ-สกุล 2 ก้อน
+    if (!firstName || !lastName) {
+        const thaiLine = lines.find(line => /(นาย|นางสาว|นาง)\s*[ก-๙]{2,}\s+[ก-๙]{2,}/.test(line));
+        if (thaiLine) {
+            const m = thaiLine.match(/(นาย|นางสาว|นาง)\s*([ก-๙]{2,})\s+([ก-๙]{2,})/);
+            if (m) {
+                if (!firstName) firstName = cleanPersonName(m[2]);
+                if (!lastName) lastName = cleanPersonName(m[3]);
+                if (m[1] === 'นาย') gender = 'ชาย';
+                if (m[1] === 'นาง' || m[1] === 'นางสาว') gender = 'หญิง';
+            }
+        }
+    }
+
+    // อังกฤษ: อ่านแบบแยกบรรทัดเท่านั้น เพื่อกัน "Name" ไปจับคำจาก "Last name"
+    // ตัวอย่างบัตร: Name Mr. John / Last name Phusiri
+    if (!firstName) {
+        const engNameLine = lines.find(line =>
+            /^(Name|Narne|Nane|Given\s*name|First\s*name)\b/i.test(line) &&
+            !/^(Last\s*name|Lastname|Surname)\b/i.test(line)
+        );
+
+        if (engNameLine) {
+            let v = engNameLine
+                .replace(/^(Name|Narne|Nane|Given\s*name|First\s*name)\s*[:\-]?\s*/i, '')
+                .replace(/^(Mr|Mrs|Miss|Ms)\.?\s*/i, '')
+                .trim();
+
+            // กัน OCR ดึงคำ label ติดมา
+            v = v.replace(/\b(Last\s*name|Lastname|Surname|Date\s*of\s*Birth|Identification)\b.*$/i, '').trim();
+
+            if (/^[A-Za-z][A-Za-z\s.'-]{1,40}$/.test(v)) {
+                firstName = cleanPersonName(v);
+            }
+        }
+    }
+
+    if (!lastName) {
+        const engLastLine = lines.find(line =>
+            /^(Last\s*name|Lastname|Last\s*narne|Surname)\b/i.test(line)
+        );
+
+        if (engLastLine) {
+            let v = engLastLine
+                .replace(/^(Last\s*name|Lastname|Last\s*narne|Surname)\s*[:\-]?\s*/i, '')
+                .trim();
+
+            v = v.replace(/\b(Date\s*of\s*Birth|Religion|Address|Issue|Expiry)\b.*$/i, '').trim();
+
+            if (/^[A-Za-z][A-Za-z\s.'-]{1,40}$/.test(v)) {
+                lastName = cleanPersonName(v);
+            }
+        }
+    }
+
+    // กันกรณี OCR อ่านนามสกุลไปใส่ทั้งชื่อและนามสกุล
+    if (
+        firstName &&
+        lastName &&
+        firstName.toLowerCase().trim() === lastName.toLowerCase().trim()
+    ) {
+        firstName = "";
+    }
+
+    if (!gender && /\bMr\.?\b/i.test(clean)) gender = 'ชาย';
+    if (!gender && /\b(Mrs|Miss|Ms)\.?\b/i.test(clean)) gender = 'หญิง';
+
+    return { firstName, lastName, gender };
+}
+
+
+function thaiMonthToNumber(monthText) {
+    const m = String(monthText || '').replace(/\./g, '').trim();
+    const map = {
+        'มค': 1, 'มกราคม': 1,
+        'กพ': 2, 'กุมภาพันธ์': 2,
+        'มีค': 3, 'มีนาคม': 3,
+        'เมย': 4, 'เมษายน': 4,
+        'พค': 5, 'พฤษภาคม': 5,
+        'มิย': 6, 'มิถุนายน': 6,
+        'กค': 7, 'กรกฎาคม': 7,
+        'สค': 8, 'สิงหาคม': 8,
+        'กย': 9, 'กันยายน': 9,
+        'ตค': 10, 'ตุลาคม': 10,
+        'พย': 11, 'พฤศจิกายน': 11,
+        'ธค': 12, 'ธันวาคม': 12
+    };
+    return map[m] || '';
+}
+
+function engMonthToNumber(monthText) {
+    let m = String(monthText || '')
+        .toLowerCase()
+        .replace(/\./g, '')
+        .replace(/0/g, 'o')
+        .replace(/1/g, 'l')
+        .trim();
+
+    // แก้ OCR ที่อ่านชื่อเดือนอังกฤษเพี้ยนเล็กน้อย เช่น nov, n0v, noy
+    const aliases = {
+        jan: 1, january: 1,
+        feb: 2, february: 2,
+        mar: 3, march: 3,
+        apr: 4, april: 4,
+        may: 5,
+        jun: 6, june: 6,
+        jul: 7, july: 7,
+        aug: 8, august: 8,
+        sep: 9, sept: 9, september: 9,
+        oct: 10, october: 10,
+        nov: 11, noy: 11, november: 11,
+        dec: 12, december: 12
+    };
+
+    if (aliases[m]) return aliases[m];
+    m = m.slice(0, 3);
+    return aliases[m] || '';
+}
+
+function toDateInputValue(y, m, d) {
+    y = Number(y); m = Number(m); d = Number(d);
+    if (!y || !m || !d) return "";
+    if (y > 2400) y -= 543;
+    if (y < 1900 || y > 2100 || m < 1 || m > 12 || d < 1 || d > 31) return "";
+    return String(y).padStart(4, '0') + '-' + String(m).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+}
+
+function calcAge(dateValue) {
+    if (!dateValue) return "";
+    const birth = new Date(dateValue + 'T00:00:00');
+    if (isNaN(birth.getTime())) return "";
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+    return age > 0 && age < 130 ? String(age) : "";
+}
+
+function normalizeDOBKeywordForOCR(text) {
+    return String(text || '')
+        .replace(/Date\s*of\s*B(?:i|1|l|I|r)?r?th/gi, 'Date of Birth')
+        .replace(/Date\s*0f\s*B(?:i|1|l|I|r)?r?th/gi, 'Date of Birth')
+        .replace(/Dale\s*of\s*B(?:i|1|l|I|r)?r?th/gi, 'Date of Birth')
+        .replace(/Birth\s*Date/gi, 'Date of Birth')
+        .replace(/Brith/gi, 'Birth')
+        .replace(/Birih/gi, 'Birth')
+        .replace(/B1rth/gi, 'Birth')
+        .replace(/BIRTH/gi, 'Birth');
+}
+
+function extractBirthDateFromOCR(text) {
+    const clean = normalizeDOBKeywordForOCR(normalizeOCRText(text));
+    const lines = clean.split('\n').map(x => x.trim()).filter(Boolean);
+    const dobIndex = lines.findIndex(line => /Date\s*of\s*Birth|เกิดวันที่|วันเกิด/i.test(line));
+
+    // รวมบรรทัด Date of Birth กับบรรทัดถัดไป เพราะ OCR อาจแยกเป็นคนละบรรทัด
+    let searchTexts = [];
+    if (dobIndex >= 0) {
+        searchTexts.push(lines.slice(dobIndex, Math.min(lines.length, dobIndex + 4)).join(' '));
+    }
+    searchTexts.push(clean);
+
+    // อังกฤษบนบัตรประชาชน: 19 Nov 1986
+    // หมายเหตุ: input type="date" ต้องใส่ค่าเป็น yyyy-mm-dd เสมอ ถึงหน้าจอจะแสดงเป็น mm/dd/yyyy ก็ตาม
+    for (const sourceText of searchTexts) {
+        const matches = [...sourceText.matchAll(/\b([0-3]?\d)\s*([A-Za-z0-9]{3,9})\.?\s*((?:19|20|25)\d{2})\b/gi)];
+        for (const item of matches) {
+            const monthNo = engMonthToNumber(item[2]);
+            const dateValue = toDateInputValue(item[3], monthNo, item[1]);
+            if (dateValue) return dateValue;
+        }
+    }
+
+    // ตัวเลขล้วนหลัง Date of Birth: 19/11/1986 หรือ 19-11-1986
+    for (const sourceText of searchTexts) {
+        const matches = [...sourceText.matchAll(/\b([0-3]?\d)[\/\-\.\s]+(\d{1,2})[\/\-\.\s]+((?:19|20|25)\d{2})\b/gi)];
+        for (const item of matches) {
+            const dateValue = toDateInputValue(item[3], item[2], item[1]);
+            if (dateValue) return dateValue;
+        }
+    }
+
+    // ไทย: เกิดวันที่ 19 พ.ย. 2536 / 19 พฤศจิกายน 2536
+    let m = clean.match(/(?:เกิดวันที่|วันเกิด)?\s*(\d{1,2})\s*(ม\.?ค\.?|ก\.?พ\.?|มี\.?ค\.?|เม\.?ย\.?|พ\.?ค\.?|มิ\.?ย\.?|ก\.?ค\.?|ส\.?ค\.?|ก\.?ย\.?|ต\.?ค\.?|พ\.?ย\.?|ธ\.?ค\.?|มกราคม|กุมภาพันธ์|มีนาคม|เมษายน|พฤษภาคม|มิถุนายน|กรกฎาคม|สิงหาคม|กันยายน|ตุลาคม|พฤศจิกายน|ธันวาคม)\s*((?:19|20|25)\d{2})/i);
+    if (m) {
+        const dateValue = toDateInputValue(m[3], thaiMonthToNumber(m[2]), m[1]);
+        if (dateValue) return dateValue;
+    }
+
+    return "";
+}
+
+function extractAddressFromOCR(text) {
+    const clean = normalizeOCRText(text);
+    const lines = clean.split('\n').map(x => x.trim()).filter(Boolean);
+    const startIndex = lines.findIndex(line => /^ที่อยู่|ที่อยู่|Address/i.test(line));
+    if (startIndex < 0) return "";
+
+    const picked = [];
+    for (let i = startIndex; i < lines.length; i++) {
+        let line = lines[i]
+            .replace(/^ที่อยู่\s*/i, '')
+            .replace(/^ที่อยู่\s*/i, '')
+            .replace(/^Address\s*/i, '')
+            .trim();
+
+        if (/วันออกบัตร|วันหมดอายุ|Date of Issue|Date of Expiry|เจ้าพนักงาน|ลงชื่อ|นายทะเบียน/i.test(line)) break;
+        if (line && /[ก-ฮ0-9]/.test(line)) picked.push(line);
+        if (picked.length >= 4) break;
+    }
+
+    return picked.join(' ').replace(/\s+/g, ' ').trim();
+}
+
+function extractZipcodeFromText(text) {
+    const clean = normalizeThaiDigits(text);
+    const m = clean.match(/\b\d{5}\b/);
+    return m ? m[0] : "";
+}
+
+function fillFormFromOCR(rawText, type) {
+    // ปิดการดึงข้อมูลจาก OCR ทั้งหมด
+    // ให้ผู้ใช้กรอกข้อมูลเองทุกช่อง
+    return;
+}
+async function processIDCardOCR(imageBase64, type) {
+    // ปิด OCR / Auto-fill ทั้งหมดตามที่กำหนด
+    markCardImageReady(type);
+    return;
+}
+
+
+function getValueById(id) {
+    const el = document.getElementById(id);
+    return el ? String(el.value || "").trim() : "";
+}
+
+function isLineLaunchSource(value){
+    const text = String(value || "").trim().toLowerCase();
+    return text === "line" || text === "liff" || text.indexOf("line") >= 0 || text.indexOf("liff") >= 0;
+}
+
+function isCurrentLineLaunch(ctx){
+    return !!(ctx && (ctx.lineVerifiedLaunch === "1" || isLineLaunchSource(ctx.lineSource)));
+}
+
+function getLineContextFromUrl(){
+    try{
+        const params = new URLSearchParams(location.search || "");
+        const initial = window.SSC_INITIAL_PARAMS || {};
+        const pick = (...names) => {
+            for (const name of names) {
+                const fromUrl = params.get(name);
+                if (fromUrl) return fromUrl;
+                if (initial[name]) return initial[name];
+            }
+            return "";
+        };
+        const source = pick("lineSource", "source", "from");
+        const fromUrl = {
+            lineUserId: pick("lineUserId", "line_user_id", "userId"),
+            lineDisplayName: pick("lineDisplayName", "line_display_name", "displayName"),
+            lineProfileUrl: pick("lineProfileUrl", "line_profile_url", "pictureUrl"),
+            lineSource: source,
+            lineVerifiedLaunch: isLineLaunchSource(source) ? "1" : "",
+            queueCheckToken: pick("queueCheckToken", "qtoken")
+        };
+
+        if(!isCurrentLineLaunch(fromUrl)){
+            clearStoredLineContext();
+            return {};
+        }
+
+        return rememberLineContext(fromUrl);
+    }catch(err){
+        clearStoredLineContext();
+        return {};
+    }
+}
+
+function hasLineContext(ctx){
+    return !!(ctx && (ctx.lineUserId || ctx.lineDisplayName || ctx.lineProfileUrl || ctx.lineSource || ctx.queueCheckToken));
+}
+
+function getStoredLineContext(){
+    try{
+        const raw = sessionStorage.getItem("sscLineContext") || localStorage.getItem("sscLineContext");
+        return raw ? JSON.parse(raw) : {};
+    }catch(err){
+        return {};
+    }
+}
+
+function clearStoredLineContext(){
+    try{
+        sessionStorage.removeItem("sscLineContext");
+        localStorage.removeItem("sscLineContext");
+    }catch(err){}
+}
+
+function rememberLineContext(ctx){
+    if(!isCurrentLineLaunch(ctx)){
+        clearStoredLineContext();
+        return {};
+    }
+    const clean = Object.assign({}, ctx || {}, { lineVerifiedLaunch: "1" });
+    if(hasLineContext(clean)){
+        try{
+            const raw = JSON.stringify(clean);
+            sessionStorage.setItem("sscLineContext", raw);
+            localStorage.setItem("sscLineContext", raw);
+        }catch(err){}
+    }
+    return clean;
+}
+
+function getCombinedAddress() {
+    const subdistrict = getValueById("addressSubdistrict");
+    const district = getValueById("addressDistrict");
+    const province = getValueById("addressProvince");
+
+    const parts = [];
+
+    if (subdistrict) {
+        parts.push("แขวง " + subdistrict);
+    }
+
+    if (district) {
+        parts.push("เขต " + district);
+    }
+
+    if (province) {
+        parts.push("จังหวัด " + province);
+    }
+
+    return parts.join(" ");
+}
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function isRetryableQueueError(err) {
+    const msg = String((err && err.message) || err || "");
+    return (
+        msg.indexOf("ไม่พบเบอร์โทร") >= 0 ||
+        msg.indexOf("หมดเวลาการล็อก") >= 0 ||
+        msg.indexOf("ล็อก") >= 0 ||
+        msg.indexOf("Lock") >= 0 ||
+        msg.indexOf("timeout") >= 0 ||
+        msg.indexOf("Timeout") >= 0 ||
+        msg.indexOf("Service invoked too many times") >= 0 ||
+        msg.indexOf("Exception:") >= 0
+    );
+}
+
+function runGoogleFunction(name, payload) {
+    if (typeof google !== "undefined" && google.script && google.script.run) {
+        return new Promise((resolve, reject) => {
+            google.script.run
+                .withSuccessHandler(resolve)
+                .withFailureHandler(reject)[name](payload);
+        });
+    }
+    return runSscApiFunction(name, payload);
+}
+
+async function checkInWithRetry(phone, options) {
+    const opt = options || {};
+    const maxAttempts = opt.maxAttempts || 10;
+    const baseDelay = opt.baseDelay || 1400;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+            if (attempt > 1) {
+                document.getElementById("loadingText").innerHTML =
+                    "ระบบกำลังออกเลขคิวให้อัตโนมัติ กรุณารอ... (" + attempt + "/" + maxAttempts + ")";
+            }
+
+            return await runGoogleFunction("checkIn", phone);
+        } catch (err) {
+            if (!isRetryableQueueError(err) || attempt >= maxAttempts) {
+                throw err;
+            }
+
+            await sleep(baseDelay + (attempt * 850));
+        }
+    }
+}
+
+async function checkInWithCardRetry(data, options) {
+    const opt = options || {};
+    const maxAttempts = opt.maxAttempts || 8;
+    const baseDelay = opt.baseDelay || 1800;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+            if (attempt > 1) {
+                document.getElementById("loadingText").innerHTML =
+                    "มีผู้ใช้งานพร้อมกันหลายคน ระบบกำลังรับคิวให้อัตโนมัติ กรุณารอ... (" + attempt + "/" + maxAttempts + ")";
+            }
+
+            return await runGoogleFunction("checkInWithCard", data);
+        } catch (err) {
+            if (!isRetryableQueueError(err) || attempt >= maxAttempts) {
+                throw err;
+            }
+
+            await sleep(baseDelay + (attempt * 1000));
+        }
+    }
+}
+
+function goToSignPage(signLink) {
+    if (!signLink) return;
+    const loading = document.getElementById("loading");
+    const loadingText = document.getElementById("loadingText");
+    if (loadingText) loadingText.innerHTML = "กำลังเปิดใบเซ็น กรุณารอสักครู่...";
+    if (loading) loading.style.display = "flex";
+    try { stopAllStreams(); } catch (err) {}
+    setTimeout(function(){
+        window.location.replace(signLink);
+    }, 80);
+}
+const SSC_POINTS_LIFF_URL = "https://liff.line.me/2009432510-Z10pm01Q/points";
+
+function buildPointsLiffUrl(res) {
+    const token = res && (res.queueCheckToken || res.qtoken || res.queueToken);
+    if (!token) return SSC_POINTS_LIFF_URL;
+    const joiner = SSC_POINTS_LIFF_URL.indexOf('?') >= 0 ? '&' : '?';
+    return SSC_POINTS_LIFF_URL + joiner + 'queueCheckToken=' + encodeURIComponent(token);
+}
+
+function goToPointsAfterQueue(res) {
+    const loading = document.getElementById("loading");
+    const loadingText = document.getElementById("loadingText");
+    if (loadingText) loadingText.innerHTML = "รับคิวสำเร็จ กำลังเปิดหน้าสะสมพอยท์...";
+    if (loading) loading.style.display = "flex";
+    try { stopAllStreams(); } catch (err) {}
+    setTimeout(function(){
+        window.location.replace(buildPointsLiffUrl(res || {}));
+    }, 80);
+}
+function submitRegisterLegacy_() {
+    if(!document.getElementById("agreeCondition").checked) {
+        showAlert("ข้อผิดพลาดการกรอก", "กรุณากดเปิดเพื่อยอมรับข้อตกลงการใช้ข้อมูลทั้งหมดก่อนทำรายการ", "warning");
+        return;
+    }
+
+    if(!document.getElementById("agreeCardPhotoConsent").checked) {
+        showAlert("กรุณายินยอม PDPA", "กรุณาติ๊กยินยอมให้ทางบริษัทเก็บภาพถ่ายบัตรประชาชนเพื่อยืนยันการเข้าร่วมงานวิจัยและรับค่าตอบแทน", "warning");
+        return;
+    }
+
+    if(!currentImage || String(currentImage).indexOf('base64,') < 0) {
+        showAlert("ยังไม่มีภาพบัตรประชาชน", "กรุณาถ่ายภาพหรือเลือกรูปบัตรประชาชนก่อนกดยืนยันลงทะเบียน", "warning");
+        return;
+    }
+    
+    const data = {
+        pid: document.getElementById("pid").value,
+        firstName: document.getElementById("firstName").value,
+        lastName: document.getElementById("lastName").value,
+        phone: document.getElementById("phone").value,
+        gender: document.getElementById("gender").value,
+        age: document.getElementById("age").value,
+        birthDate: document.getElementById("birthDate").value,
+        email: document.getElementById("email").value,
+        lineId: document.getElementById("lineId").value,
+        zipcode: document.getElementById("zipcode").value,
+        address: getCombinedAddress(),
+                addressSubdistrict: getValueById("addressSubdistrict"),
+                addressDistrict: getValueById("addressDistrict"),
+                addressProvince: getValueById("addressProvince"),
+        jobNo: document.getElementById("jobNo").value,
+        slot: document.getElementById("slot").value,
+        rcName: document.getElementById("rcName").value,
+        cardImage: currentImage
+    };
+    const lineContext = getLineContextFromUrl();
+Object.assign(data, lineContext);
+try{
+    const latestLineContext = getLineContextFromUrl();
+    Object.assign(data, latestLineContext);
+}catch(err){}
+
+    data.pid = String(data.pid || '').replace(/\D/g, '');
+    data.phone = String(data.phone || '').replace(/\D/g, '');
+    document.getElementById("pid").value = data.pid;
+    document.getElementById("phone").value = data.phone;
+
+    if(data.pid && data.pid.length !== 13) {
+        showAlert("เลขบัตรไม่ถูกต้อง", "เลขประจำตัวประชาชนต้องมี 13 หลักเท่านั้น ห้ามขาดหรือเกิน", "warning");
+        return;
+    }
+
+    if(data.phone.length !== 10) {
+        showAlert("เบอร์โทรไม่ถูกต้อง", "เบอร์โทรศัพท์ต้องมี 10 หลักเท่านั้น ห้ามขาดหรือเกิน", "warning");
+        return;
+    }
+
+    if(!data.pid || !data.firstName || !data.lastName || !data.phone || !data.gender || !data.age || !data.birthDate || !data.jobNo || !data.slot || !data.addressSubdistrict || !data.addressDistrict || !data.addressProvince) {
+        showAlert("ข้อมูลไม่ครบถ้วน", "กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน", "warning");
+        return;
+    }
+
+    if(!data.addressProvince) {
+        showAlert("ข้อมูลไม่ครบถ้วน", "กรุณากรอกจังหวัดให้ครบถ้วน", "warning");
+        return;
+    }
+
+    document.getElementById("loading").style.display = "flex";
+    document.getElementById("loadingText").innerHTML = "กำลังส่งข้อมูลลงทะเบียนของคุณ...";
+
+        runGoogleFunction("submitRegister", data)
+        .then(async res => {
+            try {
+                const q = await checkInWithRetry(data.phone, { maxAttempts: 12, baseDelay: 1200 });
+                goToPointsAfterQueue(q);
+            } catch (err) {
+                document.getElementById("loading").style.display = "none";
+                showAlert("Check-in ไม่สำเร็จ", err && err.message ? err.message : "ระบบเช็คอินไม่สำเร็จ", "warning");
+            }
+        })
+        .catch(err => {
+            document.getElementById("loading").style.display = "none";
+            showAlert("บันทึกรูป/ลงทะเบียนไม่สำเร็จ", err && err.message ? err.message : "ระบบบันทึกข้อมูลไม่สำเร็จ", "warning");
+        });
+}
+
+// PATCH SAFETY: Override submitRegister with retry-based queue issuing.
+function submitRegister() {
+    if(!document.getElementById("agreeCondition").checked) {
+        showAlert("ข้อมูลยังไม่ครบ", "กรุณายอมรับข้อตกลงก่อนดำเนินการ", "warning");
+        return;
+    }
+
+    if(!document.getElementById("agreeCardPhotoConsent").checked) {
+        showAlert("กรุณายินยอม PDPA", "กรุณายินยอมให้เก็บภาพบัตรก่อนดำเนินการ", "warning");
+        return;
+    }
+
+    if(!currentImage || String(currentImage).indexOf('base64,') < 0) {
+        showAlert("ยังไม่มีภาพบัตร", "กรุณาถ่ายภาพหรือเลือกรูปบัตรก่อนยืนยัน", "warning");
+        return;
+    }
+
+    const data = {
+        pid: document.getElementById("pid").value,
+        firstName: document.getElementById("firstName").value,
+        lastName: document.getElementById("lastName").value,
+        phone: document.getElementById("phone").value,
+        gender: document.getElementById("gender").value,
+        age: document.getElementById("age").value,
+        birthDate: document.getElementById("birthDate").value,
+        email: document.getElementById("email").value,
+        lineId: document.getElementById("lineId").value,
+        zipcode: document.getElementById("zipcode").value,
+        address: getCombinedAddress(),
+        addressSubdistrict: getValueById("addressSubdistrict"),
+        addressDistrict: getValueById("addressDistrict"),
+        addressProvince: getValueById("addressProvince"),
+        jobNo: document.getElementById("jobNo").value,
+        slot: document.getElementById("slot").value,
+        rcName: document.getElementById("rcName").value,
+        cardImage: currentImage
+    };
+
+    // PATCH ONLY: ID Card override submitRegister ต้องแนบ LINE context เหมือน index/walkin
+    // ก่อนเรียก Apps Script submitRegister ไม่งั้นคอลัมน์ lineUserId/lineDisplayName จะว่าง
+    try {
+        const lineContext = getLineContextFromUrl();
+        Object.assign(data, lineContext);
+    } catch (err) {}
+
+    data.pid = String(data.pid || '').replace(/\D/g, '');
+    data.phone = String(data.phone || '').replace(/\D/g, '');
+    document.getElementById("pid").value = data.pid;
+    document.getElementById("phone").value = data.phone;
+
+    if(data.pid && data.pid.length !== 13) {
+        showAlert("เลขบัตรไม่ถูกต้อง", "เลขประจำตัวประชาชนต้องมี 13 หลัก", "warning");
+        return;
+    }
+
+    if(data.phone.length !== 10) {
+        showAlert("เบอร์โทรไม่ถูกต้อง", "เบอร์โทรศัพท์ต้องมี 10 หลัก", "warning");
+        return;
+    }
+
+    if(!data.pid || !data.firstName || !data.lastName || !data.phone || !data.gender || !data.age || !data.birthDate || !data.jobNo || !data.slot || !data.addressSubdistrict || !data.addressDistrict || !data.addressProvince) {
+        showAlert("ข้อมูลไม่ครบถ้วน", "กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน", "warning");
+        return;
+    }
+
+    document.getElementById("loading").style.display = "flex";
+    document.getElementById("loadingText").innerHTML = "กำลังบันทึกข้อมูลและออกเลขคิว กรุณารอ...";
+
+        runGoogleFunction("submitRegister", data)
+        .then(async res => {
+            const job = findSelectedSetupJob();
+            const qMode = (job && job.queueMode ? String(job.queueMode).trim().toUpperCase() : '');
+            if(qMode === 'DIRECT' || qMode === 'OFF' || qMode === 'ปิด' || qMode === 'ปิดคิว' || qMode === 'ไม่ใช้คิว'){
+                document.getElementById("loadingText").innerHTML = "ลงทะเบียนสำเร็จ กำลังออกเลขคิวและเปิดหน้าสะสมพอยท์...";
+                const q = await checkInWithCardRetry(data, { maxAttempts: 12, baseDelay: 1200 });
+                goToPointsAfterQueue(q);
+                return;
+            }
+            try {
+                document.getElementById("loadingText").innerHTML = "ลงทะเบียนสำเร็จ กำลังออกเลขคิว กรุณารอ...";
+                const q = await checkInWithRetry(data.phone, { maxAttempts: 12, baseDelay: 1200 });
+                goToPointsAfterQueue(q);
+            } catch (err) {
+                document.getElementById("loading").style.display = "none";
+                showAlert("Check-in ไม่สำเร็จ", err && err.message ? err.message : "ระบบเช็คอินไม่สำเร็จ", "warning");
+            }
+        })
+        .catch(err => {
+            document.getElementById("loading").style.display = "none";
+            showAlert("ลงทะเบียนไม่สำเร็จ", err && err.message ? err.message : "ระบบบันทึกข้อมูลไม่สำเร็จ", "warning");
+        });
+}
+
+function submitCheckinLegacy_() {
+    if(!document.getElementById("agreeCheckinCardPhotoConsent").checked) {
+        showAlert("กรุณายินยอม PDPA", "กรุณาติ๊กยินยอมให้ทางบริษัทเก็บภาพถ่ายบัตรประชาชนเพื่อยืนยันการเข้าร่วมงานวิจัยและรับค่าตอบแทน", "warning");
+        return;
+    }
+
+    if(!currentImage || String(currentImage).indexOf('base64,') < 0) {
+        showAlert("ยังไม่มีภาพบัตรประชาชน", "กรุณาถ่ายภาพหรือเลือกรูปบัตรประชาชนก่อนกดยืนยันรับคิว", "warning");
+        return;
+    }
+
+    const phone = String(document.getElementById("checkinPhone").value || '').replace(/\D/g, '');
+    document.getElementById("checkinPhone").value = phone;
+    if(phone.length !== 10) { 
+        showAlert("เบอร์โทรไม่ถูกต้อง", "เบอร์โทรศัพท์ต้องมี 10 หลักเท่านั้น ห้ามขาดหรือเกิน", "warning"); 
+        return; 
+    }
+
+    const data = {
+        phone: phone,
+        cardImage: currentImage
+    };
+
+    // PATCH ONLY: แนบ LINE context ไปกับ flow บันทึกบัตร/รับคิวด้วย เผื่อ backend อัปเดต metadata จาก payload
+    try {
+        const lineContext = getLineContextFromUrl();
+        Object.assign(data, lineContext);
+    } catch (err) {}
+
+    document.getElementById("loading").style.display = "flex";
+    document.getElementById("loadingText").innerHTML = "กำลังบันทึกรูปบัตรและดำเนินการเช็คอิน...";
+
+        runGoogleFunction("checkInWithCard", data)
+        .then(res => {
+            goToPointsAfterQueue(res);
+        })
+        .catch(err => {
+            document.getElementById("loading").style.display = "none";
+            showAlert("เช็คอินไม่สำเร็จ", (err && err.message) ? err.message : "ไม่สามารถเช็คอินได้ กรุณาลองใหม่อีกครั้ง", "warning");
+        });
+}
+
+// PATCH SAFETY: Override check-in only flow with retry for temporary lock/time errors.
+function submitCheckin() {
+    if(!document.getElementById("agreeCheckinCardPhotoConsent").checked) {
+        showAlert("กรุณายินยอม PDPA", "กรุณายินยอมให้เก็บภาพบัตรก่อนรับคิว", "warning");
+        return;
+    }
+
+    if(!currentImage || String(currentImage).indexOf('base64,') < 0) {
+        showAlert("ยังไม่มีภาพบัตร", "กรุณาถ่ายภาพหรือเลือกรูปบัตรก่อนรับคิว", "warning");
+        return;
+    }
+
+    const phone = String(document.getElementById("checkinPhone").value || '').replace(/\D/g, '');
+    document.getElementById("checkinPhone").value = phone;
+
+    if(phone.length !== 10) {
+        showAlert("เบอร์โทรไม่ถูกต้อง", "เบอร์โทรศัพท์ต้องมี 10 หลัก", "warning");
+        return;
+    }
+
+    const data = {
+        phone: phone,
+        cardImage: currentImage
+    };
+
+    // PATCH ONLY: แนบ LINE context ไปกับ flow บันทึกบัตร/รับคิวด้วย เผื่อ backend อัปเดต metadata จาก payload
+    try {
+        const lineContext = getLineContextFromUrl();
+        Object.assign(data, lineContext);
+    } catch (err) {}
+
+    document.getElementById("loading").style.display = "flex";
+    document.getElementById("loadingText").innerHTML = "กำลังบันทึกรูปบัตรและรับคิว กรุณารอ...";
+
+        checkInWithCardRetry(data, { maxAttempts: 8, baseDelay: 1800 })
+        .then(res => {
+            goToPointsAfterQueue(res);
+        })
+        .catch(err => {
+            document.getElementById("loading").style.display = "none";
+            showAlert("เช็คอินไม่สำเร็จ", (err && err.message) ? err.message : "ไม่สามารถเช็คอินได้ กรุณาลองใหม่อีกครั้ง", "warning");
+        });
+}
+
+function displaySuccess(res) {
+    document.getElementById("successName").innerText = res.name || "-";
+    document.getElementById("successPhone").innerText = res.phone || "-";
+    document.getElementById("successJob").innerText = res.jobNo || "-";
+    document.getElementById("successRC").innerText = res.rcCode || "-";
+
+    const queueBox = document.getElementById("queueBox");
+    const queueText = document.getElementById("successQueue");
+    if (res.queue) {
+        queueText.innerText = res.queue;
+        queueBox.style.display = "block";
+    } else {
+        queueText.innerText = "";
+        queueBox.style.display = "none";
+    }
+
+    showView("successView");
+}
+
+
+function addRequiredStars(ids) {
+    ids.forEach(function(id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+
+        if (el.dataset.requiredStarFixed === "1") return;
+        el.dataset.requiredStarFixed = "1";
+
+        let target = el.parentElement;
+
+        if (target && target.classList.contains("relative")) {
+            target.classList.add("ssc-required-wrap");
+            return;
+        }
+
+        const wrap = document.createElement("div");
+        wrap.className = "ssc-required-wrap";
+
+        el.parentNode.insertBefore(wrap, el);
+        wrap.appendChild(el);
+    });
+}
+
+const TH_PROVINCES = [
+    "กรุงเทพมหานคร","กระบี่","กาญจนบุรี","กาฬสินธุ์","กำแพงเพชร","ขอนแก่น","จันทบุรี","ฉะเชิงเทรา","ชลบุรี","ชัยนาท",
+    "ชัยภูมิ","ชุมพร","เชียงราย","เชียงใหม่","ตรัง","ตราด","ตาก","นครนายก","นครปฐม","นครพนม",
+    "นครราชสีมา","นครศรีธรรมราช","นครสวรรค์","นนทบุรี","นราธิวาส","น่าน","บึงกาฬ","บุรีรัมย์","ปทุมธานี","ประจวบคีรีขันธ์",
+    "ปราจีนบุรี","ปัตตานี","พระนครศรีอยุธยา","พะเยา","พังงา","พัทลุง","พิจิตร","พิษณุโลก","เพชรบุรี","เพชรบูรณ์",
+    "แพร่","ภูเก็ต","มหาสารคาม","มุกดาหาร","แม่ฮ่องสอน","ยโสธร","ยะลา","ร้อยเอ็ด","ระนอง","ระยอง",
+    "ราชบุรี","ลพบุรี","ลำปาง","ลำพูน","เลย","ศรีสะเกษ","สกลนคร","สงขลา","สตูล","สมุทรปราการ",
+    "สมุทรสงคราม","สมุทรสาคร","สระแก้ว","สระบุรี","สิงห์บุรี","สุโขทัย","สุพรรณบุรี","สุราษฎร์ธานี","สุรินทร์","หนองคาย",
+    "หนองบัวลำภู","อ่างทอง","อำนาจเจริญ","อุดรธานี","อุตรดิตถ์","อุทัยธานี","อุบลราชธานี"
+];
+
+const BANGKOK_ADDRESS_AREAS = [
+    ["พระนคร","พระบรมมหาราชวัง","10200"],["ดุสิต","ดุสิต","10300"],["หนองจอก","กระทุ่มราย","10530"],["บางรัก","บางรัก","10500"],
+    ["บางเขน","อนุสาวรีย์","10220"],["บางกะปิ","คลองจั่น","10240"],["ปทุมวัน","ลุมพินี","10330"],["ป้อมปราบศัตรูพ่าย","ป้อมปราบ","10100"],
+    ["พระโขนง","บางจาก","10260"],["มีนบุรี","มีนบุรี","10510"],["ลาดกระบัง","ลาดกระบัง","10520"],["ยานนาวา","ช่องนนทรี","10120"],
+    ["สัมพันธวงศ์","จักรวรรดิ","10100"],["พญาไท","สามเสนใน","10400"],["ธนบุรี","ดาวคะนอง","10600"],["บางกอกใหญ่","วัดอรุณ","10600"],
+    ["ห้วยขวาง","ห้วยขวาง","10310"],["คลองสาน","คลองสาน","10600"],["ตลิ่งชัน","ตลิ่งชัน","10170"],["บางกอกน้อย","ศิริราช","10700"],
+    ["บางขุนเทียน","แสมดำ","10150"],["ภาษีเจริญ","บางหว้า","10160"],["หนองแขม","หนองแขม","10160"],["ราษฎร์บูรณะ","ราษฎร์บูรณะ","10140"],
+    ["บางพลัด","บางพลัด","10700"],["ดินแดง","ดินแดง","10400"],["บึงกุ่ม","คลองกุ่ม","10240"],["สาทร","ทุ่งวัดดอน","10120"],
+    ["บางซื่อ","บางซื่อ","10800"],["จตุจักร","จตุจักร","10900"],["บางคอแหลม","บางคอแหลม","10120"],["ประเวศ","ประเวศ","10250"],
+    ["คลองเตย","คลองเตย","10110"],["สวนหลวง","สวนหลวง","10250"],["จอมทอง","บางขุนเทียน","10150"],["ดอนเมือง","ดอนเมือง","10210"],
+    ["ราชเทวี","ถนนพญาไท","10400"],["ลาดพร้าว","ลาดพร้าว","10230"],["วัฒนา","คลองเตยเหนือ","10110"],["บางแค","บางแค","10160"],
+    ["หลักสี่","ทุ่งสองห้อง","10210"],["สายไหม","สายไหม","10220"],["คันนายาว","คันนายาว","10230"],["สะพานสูง","สะพานสูง","10240"],
+    ["วังทองหลาง","วังทองหลาง","10310"],["คลองสามวา","สามวาตะวันตก","10510"],["บางนา","บางนา","10260"],["ทวีวัฒนา","ทวีวัฒนา","10170"],
+    ["ทุ่งครุ","ทุ่งครุ","10140"],["บางบอน","บางบอน","10150"],
+    ["เมืองนนทบุรี","ตลาดขวัญ","11000","นนทบุรี"],["บางกรวย","บางกรวย","11130","นนทบุรี"],["บางใหญ่","บางม่วง","11140","นนทบุรี"],["บางบัวทอง","โสนลอย","11110","นนทบุรี"],["ไทรน้อย","ไทรน้อย","11150","นนทบุรี"],["ปากเกร็ด","ปากเกร็ด","11120","นนทบุรี"],
+    ["เมืองปทุมธานี","บางปรอก","12000","ปทุมธานี"],["คลองหลวง","คลองหนึ่ง","12120","ปทุมธานี"],["ธัญบุรี","ประชาธิปัตย์","12130","ปทุมธานี"],["หนองเสือ","บึงบา","12170","ปทุมธานี"],["ลาดหลุมแก้ว","ระแหง","12140","ปทุมธานี"],["ลำลูกกา","คูคต","12130","ปทุมธานี"],["สามโคก","สามโคก","12160","ปทุมธานี"],
+    ["เมืองสมุทรปราการ","ปากน้ำ","10270","สมุทรปราการ"],["บางบ่อ","บางบ่อ","10560","สมุทรปราการ"],["บางพลี","บางพลีใหญ่","10540","สมุทรปราการ"],["พระประแดง","ตลาด","10130","สมุทรปราการ"],["พระสมุทรเจดีย์","ปากคลองบางปลากด","10290","สมุทรปราการ"],["บางเสาธง","บางเสาธง","10570","สมุทรปราการ"],
+    ["เมืองสมุทรสาคร","มหาชัย","74000","สมุทรสาคร"],["กระทุ่มแบน","ตลาดกระทุ่มแบน","74110","สมุทรสาคร"],["บ้านแพ้ว","บ้านแพ้ว","74120","สมุทรสาคร"],
+    ["เมืองนครปฐม","พระปฐมเจดีย์","73000","นครปฐม"],["กำแพงแสน","กำแพงแสน","73140","นครปฐม"],["นครชัยศรี","นครชัยศรี","73120","นครปฐม"],["ดอนตูม","สามง่าม","73150","นครปฐม"],["บางเลน","บางเลน","73130","นครปฐม"],["สามพราน","สามพราน","73110","นครปฐม"],["พุทธมณฑล","ศาลายา","73170","นครปฐม"]
+];
+
+function setupAddressAutocomplete() {
+    fillDatalist("provinceOptions", TH_PROVINCES);
+    fillDatalist("districtOptions", BANGKOK_ADDRESS_AREAS.map(function(item) { return item[0]; }));
+    fillDatalist("subdistrictOptions", BANGKOK_ADDRESS_AREAS.map(function(item) { return item[1]; }));
+
+    ["addressSubdistrict", "addressDistrict", "addressProvince"].forEach(function(id) {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener("input", syncAddressZipcode);
+            el.addEventListener("change", syncAddressZipcode);
+        }
+    });
+
+    const zipcodeEl = document.getElementById("zipcode");
+    if (zipcodeEl) {
+        zipcodeEl.addEventListener("input", function() {
+            zipcodeEl.dataset.autoZip = "";
+        });
+    }
+}
+
+function fillDatalist(id, values) {
+    const list = document.getElementById(id);
+    if (!list) return;
+    const unique = Array.from(new Set(values.filter(Boolean)));
+    list.innerHTML = unique.map(function(value) {
+        return '<option value="' + escapeAttr(value) + '"></option>';
+    }).join("");
+}
+
+function escapeAttr(value) {
+    return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/"/g, "&quot;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+}
+
+function normalizeAddressText(value) {
+    return String(value || "")
+        .replace(/^(แขวง|ตำบล|เขต|อำเภอ|อ\.|จ\.|จังหวัด)\s*/g, "")
+        .trim();
+}
+
+function syncAddressZipcode(event) {
+    const subdistrictEl = document.getElementById("addressSubdistrict");
+    const districtEl = document.getElementById("addressDistrict");
+    const zipcodeEl = document.getElementById("zipcode");
+    if (!zipcodeEl) return;
+
+    const subdistrict = normalizeAddressText(subdistrictEl ? subdistrictEl.value : "");
+    const district = normalizeAddressText(districtEl ? districtEl.value : "");
+
+    if (!subdistrict && !district) {
+        if (zipcodeEl.dataset.autoZip === "1") zipcodeEl.value = "";
+        zipcodeEl.dataset.autoZip = "";
+        return;
+    }
+
+    const match = BANGKOK_ADDRESS_AREAS.find(function(item) {
+        return (district && item[0] === district) || (subdistrict && item[1] === subdistrict);
+    });
+
+    if (!match) {
+        if (zipcodeEl.dataset.autoZip === "1") zipcodeEl.value = "";
+        zipcodeEl.dataset.autoZip = "";
+        return;
+    }
+
+    zipcodeEl.value = match[2];
+    zipcodeEl.dataset.autoZip = "1";
+}
+
+function setupLineFriendlyInputs() {
+    ["pid", "phone", "checkinPhone", "age", "zipcode"].forEach(function(id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener("input", function() {
+            const max = Number(el.getAttribute("maxlength") || 0);
+            let digits = String(el.value || "").replace(/\D/g, "");
+            if (max > 0) digits = digits.slice(0, max);
+            el.value = digits;
+        });
+    });
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    addRequiredStars(["pid","firstName","lastName","phone","gender","age","birthDate","addressSubdistrict","addressDistrict","addressProvince","jobNo","slot"]);
+    setupAddressAutocomplete();
+    setupLineFriendlyInputs();
+});
+
+</script>
+<script>
+(function(){
+  return;
+  if (document.getElementById('sscHomeButton')) return;
+  if (shouldHideSscHomeButton()) return;
+  var btn = document.createElement('button');
+  btn.id = 'sscHomeButton';
+  btn.type = 'button';
+  btn.textContent = 'Home';
+  btn.style.cssText = 'position:fixed;left:14px;bottom:calc(18px + env(safe-area-inset-bottom, 0px));z-index:99999;border:0;border-radius:999px;padding:10px 16px;background:#0f172a;color:#fff;font-family:Kanit,system-ui,sans-serif;font-weight:900;box-shadow:0 10px 24px rgba(15,23,42,.24);cursor:pointer;';
+  btn.onclick = function(){
+    var url = new URL(getAppBaseUrl());
+    url.searchParams.set('page', 'portal');
+    window.open(url.toString(), '_top');
+  };
+  function getAppBaseUrl(){
+    var fixedBaseUrl = 'https://script.google.com/macros/s/AKfycbwSfaw2bgEOciLgC6ownFi90CkENWWgjrTxBRCNlLFxEzXqNWaft87X6Etvz2xdF4d-/exec';
+    try{
+      var current = new URL(location.href);
+      if(current.hostname === 'script.google.com' && current.pathname.indexOf('/exec') !== -1){
+        return current.origin + current.pathname.split('/exec')[0] + '/exec';
+      }
+    }catch(err){}
+    return fixedBaseUrl;
+  }
+  function shouldHideSscHomeButton(){
+    try{
+      var params = new URLSearchParams(location.search || '');
+      var from = String(params.get('from') || params.get('source') || '').toLowerCase();
+      if(String(window.name || '').toLowerCase() === 'sakehub') return true;
+      if(params.get('hideHome') === '1' || from === 'hub' || from === 'sakehub') return true;
+
+      if(document.referrer){
+        var refHost = new URL(document.referrer).hostname.toLowerCase();
+        var googleFrame = refHost === 'script.google.com' || refHost.endsWith('.googleusercontent.com');
+        return !googleFrame;
+      }
+    }catch(err){}
+    return false;
+  }
+  document.body.appendChild(btn);
+})();
+</script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
