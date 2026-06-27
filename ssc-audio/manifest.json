@@ -1,212 +1,212 @@
 [
     {
         "File":  "queue.mp3",
-        "Text":  "คิว",
-        "Bytes":  7680,
+        "Text":  "ขอเชิญคิว",
+        "Bytes":  19200,
         "OK":  true
     },
     {
         "File":  "prepare.mp3",
-        "Text":  "เตรียมตัวเข้าห้องสัมภาษณ์ค่ะ",
-        "Bytes":  22464,
+        "Text":  "เข้าห้องสัมภาษณ์ค่ะ",
+        "Bytes":  18816,
         "OK":  true
     },
     {
         "File":  "0.mp3",
         "Text":  "ศูนย์",
-        "Bytes":  8832,
+        "Bytes":  11520,
         "OK":  true
     },
     {
         "File":  "1.mp3",
         "Text":  "หนึ่ง",
-        "Bytes":  7680,
+        "Bytes":  9600,
         "OK":  true
     },
     {
         "File":  "2.mp3",
         "Text":  "สอง",
-        "Bytes":  9216,
+        "Bytes":  11904,
         "OK":  true
     },
     {
         "File":  "3.mp3",
         "Text":  "สาม",
-        "Bytes":  9216,
+        "Bytes":  11904,
         "OK":  true
     },
     {
         "File":  "4.mp3",
         "Text":  "สี่",
-        "Bytes":  8832,
+        "Bytes":  10368,
         "OK":  true
     },
     {
         "File":  "5.mp3",
         "Text":  "ห้า",
-        "Bytes":  7872,
+        "Bytes":  9984,
         "OK":  true
     },
     {
         "File":  "6.mp3",
         "Text":  "หก",
-        "Bytes":  6336,
+        "Bytes":  7680,
         "OK":  true
     },
     {
         "File":  "7.mp3",
         "Text":  "เจ็ด",
-        "Bytes":  5760,
+        "Bytes":  5376,
         "OK":  true
     },
     {
         "File":  "8.mp3",
         "Text":  "แปด",
-        "Bytes":  7488,
+        "Bytes":  9984,
         "OK":  true
     },
     {
         "File":  "9.mp3",
         "Text":  "เก้า",
-        "Bytes":  7872,
+        "Bytes":  9984,
         "OK":  true
     },
     {
         "File":  "a.mp3",
         "Text":  "เอ",
-        "Bytes":  7296,
+        "Bytes":  11136,
         "OK":  true
     },
     {
         "File":  "b.mp3",
         "Text":  "บี",
-        "Bytes":  7296,
+        "Bytes":  11904,
         "OK":  true
     },
     {
         "File":  "c.mp3",
         "Text":  "ซี",
-        "Bytes":  7872,
+        "Bytes":  11904,
         "OK":  true
     },
     {
         "File":  "d.mp3",
         "Text":  "ดี",
-        "Bytes":  7488,
+        "Bytes":  11520,
         "OK":  true
     },
     {
         "File":  "e.mp3",
         "Text":  "อี",
-        "Bytes":  7104,
+        "Bytes":  9984,
         "OK":  true
     },
     {
         "File":  "f.mp3",
         "Text":  "เอฟ",
-        "Bytes":  6336,
+        "Bytes":  8064,
         "OK":  true
     },
     {
         "File":  "g.mp3",
         "Text":  "จี",
-        "Bytes":  7296,
+        "Bytes":  10752,
         "OK":  true
     },
     {
         "File":  "h.mp3",
         "Text":  "เอช",
-        "Bytes":  6144,
+        "Bytes":  8064,
         "OK":  true
     },
     {
         "File":  "i.mp3",
         "Text":  "ไอ",
-        "Bytes":  7488,
+        "Bytes":  8832,
         "OK":  true
     },
     {
         "File":  "j.mp3",
         "Text":  "เจ",
-        "Bytes":  7488,
+        "Bytes":  6912,
         "OK":  true
     },
     {
         "File":  "k.mp3",
         "Text":  "เค",
-        "Bytes":  7872,
+        "Bytes":  9216,
         "OK":  true
     },
     {
         "File":  "l.mp3",
         "Text":  "แอล",
-        "Bytes":  7488,
+        "Bytes":  8832,
         "OK":  true
     },
     {
         "File":  "m.mp3",
         "Text":  "เอ็ม",
-        "Bytes":  7104,
+        "Bytes":  9600,
         "OK":  true
     },
     {
         "File":  "n.mp3",
         "Text":  "เอ็น",
-        "Bytes":  6720,
+        "Bytes":  9600,
         "OK":  true
     },
     {
         "File":  "o.mp3",
         "Text":  "โอ",
-        "Bytes":  7488,
+        "Bytes":  9984,
         "OK":  true
     },
     {
         "File":  "p.mp3",
         "Text":  "พี",
-        "Bytes":  7680,
+        "Bytes":  11136,
         "OK":  true
     },
     {
         "File":  "q.mp3",
         "Text":  "คิว",
-        "Bytes":  7680,
+        "Bytes":  11520,
         "OK":  true
     },
     {
         "File":  "r.mp3",
         "Text":  "อาร์",
-        "Bytes":  7104,
+        "Bytes":  9600,
         "OK":  true
     },
     {
         "File":  "s.mp3",
         "Text":  "เอส",
-        "Bytes":  6144,
+        "Bytes":  9984,
         "OK":  true
     },
     {
         "File":  "t.mp3",
         "Text":  "ที",
-        "Bytes":  7680,
+        "Bytes":  10752,
         "OK":  true
     },
     {
         "File":  "u.mp3",
         "Text":  "ยู",
-        "Bytes":  7488,
+        "Bytes":  11136,
         "OK":  true
     },
     {
         "File":  "v.mp3",
         "Text":  "วี",
-        "Bytes":  7296,
+        "Bytes":  10752,
         "OK":  true
     },
     {
         "File":  "w.mp3",
-        "Text":  "ดับเบิลยู",
-        "Bytes":  12288,
+        "Text":  "ดับเบิลยู เอ็กซ์",
+        "Bytes":  18048,
         "OK":  true
     },
     {
@@ -218,13 +218,13 @@
     {
         "File":  "y.mp3",
         "Text":  "วาย",
-        "Bytes":  8064,
+        "Bytes":  10368,
         "OK":  true
     },
     {
         "File":  "z.mp3",
         "Text":  "แซด",
-        "Bytes":  6720,
+        "Bytes":  9984,
         "OK":  true
     }
 ]
