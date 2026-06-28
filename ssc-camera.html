@@ -18,8 +18,9 @@
     .main { min-height: 0; padding: 14px; display: flex; align-items: center; justify-content: center; }
     .camera-shell { width: min(100%, 920px); }
     .camera-stage { position: relative; width: 100%; height: min(66dvh, 640px); min-height: 310px; overflow: hidden; border: 1px solid #334155; border-radius: 8px; background: #020617; }
-    video, .preview { width: 100%; height: 100%; display: block; object-fit: cover; }
-    .preview { display: none; }
+    video, .preview { width: 100%; height: 100%; display: block; }
+    video { object-fit: cover; }
+    .preview { display: none; object-fit: contain; background: #020617; padding: 8px; }
     .frame { position: absolute; left: 50%; top: 50%; width: min(88%, 720px); aspect-ratio: 1.586 / 1; transform: translate(-50%, -50%); border: 4px solid #f8fafc; border-radius: 14px; box-shadow: 0 0 0 9999px rgba(2, 6, 23, .58); pointer-events: none; }
     .corner { position: absolute; width: 32px; height: 32px; border-color: #22d3ee; border-style: solid; }
     .corner.tl { left: -5px; top: -5px; border-width: 5px 0 0 5px; border-radius: 12px 0 0; }
@@ -261,6 +262,7 @@
       }
 
       const target = new URL(returnUrl);
+      target.searchParams.set("page", "idcard");
       target.searchParams.set("cameraToken", token);
       target.searchParams.set("cameraType", cameraType);
       location.replace(target.toString());
