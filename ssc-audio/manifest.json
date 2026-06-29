@@ -1,0 +1,344 @@
+[
+  {
+    "File": "prepare.mp3",
+    "Text": "เตรียมตัวเข้าห้องสัมภาษณ์ค่ะ",
+    "Start": 0.03,
+    "End": 1.9,
+    "Duration": 1.87,
+    "Bytes": 30720,
+    "OK": true
+  },
+  {
+    "File": "queue.mp3",
+    "Text": "คิว",
+    "Start": 3.87,
+    "End": 4.67,
+    "Duration": 0.8,
+    "Bytes": 13824,
+    "OK": true
+  },
+  {
+    "File": "0.mp3",
+    "Text": "ศูนย์",
+    "Start": 6.39,
+    "End": 7.1,
+    "Duration": 0.71,
+    "Bytes": 12288,
+    "OK": true
+  },
+  {
+    "File": "1.mp3",
+    "Text": "หนึ่ง",
+    "Start": 8.93,
+    "End": 9.67,
+    "Duration": 0.74,
+    "Bytes": 12672,
+    "OK": true
+  },
+  {
+    "File": "2.mp3",
+    "Text": "สอง",
+    "Start": 11.45,
+    "End": 12.29,
+    "Duration": 0.84,
+    "Bytes": 14208,
+    "OK": true
+  },
+  {
+    "File": "3.mp3",
+    "Text": "สาม",
+    "Start": 13.94,
+    "End": 14.7,
+    "Duration": 0.76,
+    "Bytes": 13056,
+    "OK": true
+  },
+  {
+    "File": "4.mp3",
+    "Text": "สี่",
+    "Start": 16.2,
+    "End": 16.89,
+    "Duration": 0.69,
+    "Bytes": 11904,
+    "OK": true
+  },
+  {
+    "File": "5.mp3",
+    "Text": "ห้า",
+    "Start": 18.54,
+    "End": 19.1,
+    "Duration": 0.56,
+    "Bytes": 9984,
+    "OK": true
+  },
+  {
+    "File": "6.mp3",
+    "Text": "หก",
+    "Start": 20.86,
+    "End": 21.57,
+    "Duration": 0.71,
+    "Bytes": 12288,
+    "OK": true
+  },
+  {
+    "File": "7.mp3",
+    "Text": "เจ็ด",
+    "Start": 23.18,
+    "End": 23.82,
+    "Duration": 0.64,
+    "Bytes": 11136,
+    "OK": true
+  },
+  {
+    "File": "8.mp3",
+    "Text": "แปด",
+    "Start": 25.58,
+    "End": 26.22,
+    "Duration": 0.64,
+    "Bytes": 11136,
+    "OK": true
+  },
+  {
+    "File": "9.mp3",
+    "Text": "เก้า",
+    "Start": 28.06,
+    "End": 28.57,
+    "Duration": 0.51,
+    "Bytes": 9216,
+    "OK": true
+  },
+  {
+    "File": "a.mp3",
+    "Text": "A",
+    "Start": 30.37,
+    "End": 31.14,
+    "Duration": 0.77,
+    "Bytes": 13440,
+    "OK": true
+  },
+  {
+    "File": "b.mp3",
+    "Text": "B",
+    "Start": 32.86,
+    "End": 33.56,
+    "Duration": 0.7,
+    "Bytes": 12288,
+    "OK": true
+  },
+  {
+    "File": "c.mp3",
+    "Text": "C",
+    "Start": 35.33,
+    "End": 36.01,
+    "Duration": 0.68,
+    "Bytes": 11904,
+    "OK": true
+  },
+  {
+    "File": "d.mp3",
+    "Text": "D",
+    "Start": 37.8,
+    "End": 38.51,
+    "Duration": 0.71,
+    "Bytes": 12288,
+    "OK": true
+  },
+  {
+    "File": "e.mp3",
+    "Text": "E",
+    "Start": 40.35,
+    "End": 41.05,
+    "Duration": 0.7,
+    "Bytes": 12288,
+    "OK": true
+  },
+  {
+    "File": "f.mp3",
+    "Text": "F",
+    "Start": 42.65,
+    "End": 43.35,
+    "Duration": 0.7,
+    "Bytes": 12288,
+    "OK": true
+  },
+  {
+    "File": "g.mp3",
+    "Text": "G",
+    "Start": 45.09,
+    "End": 45.88,
+    "Duration": 0.79,
+    "Bytes": 13440,
+    "OK": true
+  },
+  {
+    "File": "h.mp3",
+    "Text": "H",
+    "Start": 47.57,
+    "End": 48.28,
+    "Duration": 0.71,
+    "Bytes": 12288,
+    "OK": true
+  },
+  {
+    "File": "i.mp3",
+    "Text": "I",
+    "Start": 50.01,
+    "End": 50.63,
+    "Duration": 0.62,
+    "Bytes": 10752,
+    "OK": true
+  },
+  {
+    "File": "j.mp3",
+    "Text": "J",
+    "Start": 52.32,
+    "End": 53.04,
+    "Duration": 0.72,
+    "Bytes": 12288,
+    "OK": true
+  },
+  {
+    "File": "k.mp3",
+    "Text": "K",
+    "Start": 54.7,
+    "End": 55.43,
+    "Duration": 0.73,
+    "Bytes": 12672,
+    "OK": true
+  },
+  {
+    "File": "l.mp3",
+    "Text": "L",
+    "Start": 57.09,
+    "End": 57.84,
+    "Duration": 0.75,
+    "Bytes": 13056,
+    "OK": true
+  },
+  {
+    "File": "m.mp3",
+    "Text": "M",
+    "Start": 59.48,
+    "End": 60.42,
+    "Duration": 0.94,
+    "Bytes": 16128,
+    "OK": true
+  },
+  {
+    "File": "n.mp3",
+    "Text": "N",
+    "Start": 61.98,
+    "End": 62.64,
+    "Duration": 0.66,
+    "Bytes": 11520,
+    "OK": true
+  },
+  {
+    "File": "o.mp3",
+    "Text": "O",
+    "Start": 64.37,
+    "End": 65.16,
+    "Duration": 0.79,
+    "Bytes": 13440,
+    "OK": true
+  },
+  {
+    "File": "p.mp3",
+    "Text": "P",
+    "Start": 66.65,
+    "End": 67.19,
+    "Duration": 0.54,
+    "Bytes": 9600,
+    "OK": true
+  },
+  {
+    "File": "q.mp3",
+    "Text": "Q",
+    "Start": 69.06,
+    "End": 69.89,
+    "Duration": 0.83,
+    "Bytes": 14208,
+    "OK": true
+  },
+  {
+    "File": "r.mp3",
+    "Text": "R",
+    "Start": 71.62,
+    "End": 72.33,
+    "Duration": 0.71,
+    "Bytes": 12288,
+    "OK": true
+  },
+  {
+    "File": "s.mp3",
+    "Text": "S",
+    "Start": 74.1,
+    "End": 74.93,
+    "Duration": 0.83,
+    "Bytes": 14208,
+    "OK": true
+  },
+  {
+    "File": "t.mp3",
+    "Text": "T",
+    "Start": 76.36,
+    "End": 77.23,
+    "Duration": 0.87,
+    "Bytes": 14976,
+    "OK": true
+  },
+  {
+    "File": "u.mp3",
+    "Text": "U",
+    "Start": 78.81,
+    "End": 79.6,
+    "Duration": 0.79,
+    "Bytes": 13440,
+    "OK": true
+  },
+  {
+    "File": "v.mp3",
+    "Text": "V",
+    "Start": 81.17,
+    "End": 81.91,
+    "Duration": 0.74,
+    "Bytes": 12672,
+    "OK": true
+  },
+  {
+    "File": "w.mp3",
+    "Text": "W",
+    "Start": 83.58,
+    "End": 84.01,
+    "Duration": 0.43,
+    "Bytes": 7680,
+    "OK": true
+  },
+  {
+    "File": "x.mp3",
+    "Text": "X",
+    "Start": 85.67,
+    "End": 86.11,
+    "Duration": 0.44,
+    "Bytes": 8064,
+    "OK": true
+  },
+  {
+    "File": "y.mp3",
+    "Text": "Y",
+    "Start": 87.84,
+    "End": 88.4,
+    "Duration": 0.56,
+    "Bytes": 9984,
+    "OK": true
+  },
+  {
+    "File": "z.mp3",
+    "Text": "Z",
+    "Start": 90.05,
+    "End": 90.76,
+    "Duration": 0.71,
+    "Bytes": 12288,
+    "OK": true
+  }
+]
