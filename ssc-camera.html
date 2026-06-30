@@ -324,8 +324,11 @@
 
       try {
         const parsed = new URL(value);
-        const isAppsScript = parsed.protocol === "https:" && parsed.hostname === "script.google.com" && parsed.pathname.includes("/macros/s/");
-        return isAppsScript ? parsed.toString() : fallback.toString();
+        const isAllowedDomain = (parsed.hostname === "script.google.com" || 
+                                 parsed.hostname === "ssc-fw.web.app" || 
+                                 parsed.hostname === "localhost" || 
+                                 parsed.hostname === "127.0.0.1");
+        return isAllowedDomain ? parsed.toString() : fallback.toString();
       } catch (err) {
         return fallback.toString();
       }
