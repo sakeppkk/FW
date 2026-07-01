@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#08111f">
+  <title>SSC Card Camera</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: #08111f; color: #f8fafc; font-family: system-ui, "Noto Sans Thai", sans-serif; }
+    button { font: inherit; }
+    .app { min-height: 100dvh; display: grid; grid-template-rows: auto 1fr auto; }
+    .topbar { min-height: 64px; padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 10px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #243247; background: #0d1728; }
+    .back { width: 42px; height: 42px; border: 1px solid #334155; border-radius: 8px; background: #182438; color: #fff; font-size: 24px; cursor: pointer; }
+    .title { min-width: 0; }
+    .title h1 { margin: 0; font-size: 18px; line-height: 1.25; }
+    .title p { margin: 3px 0 0; color: #9fb0c7; font-size: 12px; }
+    .main { min-height: 0; padding: 14px; display: flex; align-items: center; justify-content: center; }
+    .camera-shell { width: min(100%, 920px); }
+    .camera-stage { position: relative; width: 100%; height: min(66dvh, 640px); min-height: 310px; overflow: hidden; border: 1px solid #334155; border-radius: 8px; background: #020617; }
+    video, .preview { width: 100%; height: 100%; display: block; }
+    video { object-fit: cover; }
+    .preview { display: none; object-fit: contain; background: #020617; padding: 8px; }
+    .frame { position: absolute; left: 50%; top: 50%; width: min(88%, 720px); aspect-ratio: 1.586 / 1; transform: translate(-50%, -50%); border: 4px solid #f8fafc; border-radius: 14px; box-shadow: 0 0 0 9999px rgba(2, 6, 23, .58); pointer-events: none; }
+    .corner { position: absolute; width: 32px; height: 32px; border-color: #22d3ee; border-style: solid; }
+    .corner.tl { left: -5px; top: -5px; border-width: 5px 0 0 5px; border-radius: 12px 0 0; }
+    .corner.tr { right: -5px; top: -5px; border-width: 5px 5px 0 0; border-radius: 0 12px 0 0; }
+    .corner.bl { left: -5px; bottom: -5px; border-width: 0 0 5px 5px; border-radius: 0 0 0 12px; }
+    .corner.br { right: -5px; bottom: -5px; border-width: 0 5px 5px 0; border-radius: 0 0 12px; }
+    .guide { position: absolute; left: 50%; bottom: 20px; transform: translateX(-50%); width: calc(100% - 32px); max-width: 620px; margin: 0; padding: 10px 14px; border-radius: 8px; background: rgba(8, 17, 31, .88); color: #e2e8f0; text-align: center; font-size: 13px; font-weight: 700; pointer-events: none; }
+    .status { display: none; position: absolute; inset: 0; padding: 24px; align-items: center; justify-content: center; text-align: center; background: #08111f; color: #e2e8f0; }
+    .status.show { display: flex; }
+    .status-card { max-width: 420px; }
+    .status-card strong { display: block; margin-bottom: 8px; font-size: 20px; }
+    .status-card p { margin: 0; color: #9fb0c7; line-height: 1.55; }
+    .actions { padding: 12px 14px calc(12px + env(safe-area-inset-bottom, 0px)); display: grid; grid-template-columns: 1fr; gap: 10px; border-top: 1px solid #243247; background: #0d1728; }
+    .btn { min-height: 52px; border: 0; border-radius: 8px; font-weight: 800; cursor: pointer; transition: transform .12s ease, opacity .12s ease; }
+    .btn:active { transform: scale(.98); }
+    .btn:disabled { opacity: .55; cursor: wait; }
+    .capture { background: #10b981; color: #04110d; }
+    .retry { display: none; background: #334155; color: #fff; }
+    .confirm { display: none; background: #22d3ee; color: #06131b; }
+    .spinner { width: 32px; height: 32px; margin: 0 auto 14px; border: 4px solid #334155; border-top-color: #22d3ee; border-radius: 50%; animation: spin .8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (min-width: 720px) {
+      .actions { grid-template-columns: 1fr 1fr; }
+      .capture { grid-column: 1 / -1; }
+      .camera-stage { min-height: 460px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <button id="backButton" class="back" type="button" aria-label="กลับ">&#8249;</button>
+      <div class="title">
+        <h1>ถ่ายภาพบัตรประชาชน</h1>
+        <p>วางบัตรให้เต็มกรอบ ระบบจะตัดภาพตามกรอบให้อัตโนมัติ</p>
+      </div>
+    </header>
+
+    <section class="main">
+      <div class="camera-shell">
+        <div id="cameraStage" class="camera-stage">
+          <video id="cameraVideo" autoplay muted playsinline></video>
+          <img id="previewImage" class="preview" alt="ภาพบัตรที่ถ่าย">
+          <div id="cardFrame" class="frame" aria-hidden="true">
+            <span class="corner tl"></span><span class="corner tr"></span>
+            <span class="corner bl"></span><span class="corner br"></span>
+          </div>
+          <p id="guideText" class="guide">ให้บัตรอยู่ภายในกรอบสีขาวและมองเห็นข้อมูลชัดเจน</p>
+          <div id="statusPanel" class="status show">
+            <div class="status-card">
+              <div id="statusSpinner" class="spinner"></div>
+              <strong id="statusTitle">กำลังเปิดกล้อง</strong>
+              <p id="statusMessage">กรุณาอนุญาตการใช้กล้องเมื่อระบบถาม</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="actions">
+      <button id="captureButton" class="btn capture" type="button" disabled>ถ่ายภาพตามกรอบ</button>
+      <button id="retryButton" class="btn retry" type="button">ถ่ายใหม่</button>
+      <button id="confirmButton" class="btn confirm" type="button">ใช้ภาพนี้</button>
+    </footer>
+  </main>
+
+  <iframe id="bridgeFrame" name="bridgeFrame" hidden title="camera upload"></iframe>
+  <form id="bridgeForm" method="post" target="bridgeFrame" hidden></form>
+
+  <script>
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz9b0mouAfFlIEytq0PQkgd62os0GiGo1k8OA7VPQtOIq9rz1GtZ_-uCaTfwgc0cs5O/exec";
+    const DEFAULT_RETURN_URL = "https://ssc-fw.web.app/idcard.html";
+    const ALLOWED_RETURN_HOSTS = new Set([
+      "ssc-fw.web.app",
+      "ssc-fw.firebaseapp.com"
+    ]);
+    const params = new URLSearchParams(location.search);
+    const cameraType = params.get("cameraType") === "checkin" ? "checkin" : "register";
+    const returnUrl = getSafeReturnUrl(params.get("returnUrl"));
+    const token = createToken();
+
+    const video = document.getElementById("cameraVideo");
+    const preview = document.getElementById("previewImage");
+    const frame = document.getElementById("cardFrame");
+    const guide = document.getElementById("guideText");
+    const statusPanel = document.getElementById("statusPanel");
+    const statusSpinner = document.getElementById("statusSpinner");
+    const statusTitle = document.getElementById("statusTitle");
+    const statusMessage = document.getElementById("statusMessage");
+    const captureButton = document.getElementById("captureButton");
+    const retryButton = document.getElementById("retryButton");
+    const confirmButton = document.getElementById("confirmButton");
+
+    let stream = null;
+    let capturedImage = "";
+    let uploadTimer = null;
+
+    document.getElementById("backButton").addEventListener("click", returnWithoutImage);
+    captureButton.addEventListener("click", captureCardFrame);
+    retryButton.addEventListener("click", startCamera);
+    confirmButton.addEventListener("click", uploadCapture);
+    window.addEventListener("message", handleBridgeMessage);
+    window.addEventListener("pagehide", stopCamera);
+
+    startCamera();
+
+    async function startCamera() {
+      stopCamera();
+      capturedImage = "";
+      preview.removeAttribute("src");
+      preview.style.display = "none";
+      video.style.display = "block";
+      frame.style.display = "block";
+      guide.style.display = "block";
+      captureButton.style.display = "block";
+      captureButton.disabled = true;
+      retryButton.style.display = "none";
+      confirmButton.style.display = "none";
+      showStatus("กำลังเปิดกล้อง", "กรุณาอนุญาตการใช้กล้องเมื่อระบบถาม", true);
+
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        showCameraError("เบราว์เซอร์นี้ไม่รองรับกล้องเว็บสด");
+        return;
+      }
+
+      const attempts = [
+        { video: { facingMode: { exact: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false },
+        { video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false },
+        { video: { width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false },
+        { video: true, audio: false }
+      ];
+
+      let lastError = null;
+      for (const constraints of attempts) {
+        try {
+          stream = await navigator.mediaDevices.getUserMedia(constraints);
+          break;
+        } catch (err) {
+          lastError = err;
+          if (err && (err.name === "NotAllowedError" || err.name === "SecurityError")) break;
+        }
+      }
+
+      if (!stream) {
+        const reason = lastError && lastError.name === "NotAllowedError"
+          ? "ไม่ได้รับอนุญาตให้ใช้กล้อง กรุณาอนุญาตกล้องแล้วกดลองใหม่"
+          : "เปิดกล้องไม่สำเร็จ กรุณาปิดแล้วเปิดใหม่อีกครั้ง";
+        showCameraError(reason);
+        return;
+      }
+
+      video.srcObject = stream;
+      try { await video.play(); } catch (err) {}
+
+      if (!video.videoWidth) {
+        await new Promise(resolve => video.addEventListener("loadedmetadata", resolve, { once: true }));
+      }
+
+      hideStatus();
+      captureButton.disabled = false;
+    }
+
+    function captureCardFrame() {
+      if (!video.videoWidth || !video.videoHeight) {
+        showCameraError("กล้องยังไม่พร้อม กรุณาลองใหม่");
+        return;
+      }
+
+      const videoRect = video.getBoundingClientRect();
+      const frameRect = frame.getBoundingClientRect();
+      const scale = Math.max(videoRect.width / video.videoWidth, videoRect.height / video.videoHeight);
+      const renderedWidth = video.videoWidth * scale;
+      const renderedHeight = video.videoHeight * scale;
+      const hiddenX = (renderedWidth - videoRect.width) / 2;
+      const hiddenY = (renderedHeight - videoRect.height) / 2;
+
+      let sx = (frameRect.left - videoRect.left + hiddenX) / scale;
+      let sy = (frameRect.top - videoRect.top + hiddenY) / scale;
+      let sw = frameRect.width / scale;
+      let sh = frameRect.height / scale;
+
+      sx = Math.max(0, Math.min(video.videoWidth - 1, sx));
+      sy = Math.max(0, Math.min(video.videoHeight - 1, sy));
+      sw = Math.max(1, Math.min(video.videoWidth - sx, sw));
+      sh = Math.max(1, Math.min(video.videoHeight - sy, sh));
+
+      const canvas = document.createElement("canvas");
+      canvas.width = 1200;
+      canvas.height = Math.round(1200 / 1.586);
+      const context = canvas.getContext("2d");
+      context.fillStyle = "#ffffff";
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      context.imageSmoothingEnabled = true;
+      context.imageSmoothingQuality = "high";
+      context.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+
+      capturedImage = canvas.toDataURL("image/jpeg", 0.88);
+      preview.src = capturedImage;
+      preview.style.display = "block";
+      video.style.display = "none";
+      frame.style.display = "none";
+      guide.style.display = "none";
+      captureButton.style.display = "none";
+      retryButton.style.display = "block";
+      confirmButton.style.display = "block";
+      stopCamera();
+    }
+
+    function uploadCapture() {
+      if (!capturedImage) return;
+
+      retryButton.disabled = true;
+      confirmButton.disabled = true;
+      showStatus("กำลังส่งภาพกลับ SSC", "กรุณารอสักครู่และอย่าปิดหน้านี้", true);
+
+      const form = document.getElementById("bridgeForm");
+      form.action = APPS_SCRIPT_URL;
+      form.replaceChildren(
+        hiddenField("apiAction", "saveCameraCapture"),
+        hiddenField("token", token),
+        hiddenField("cameraType", cameraType),
+        hiddenField("imageData", capturedImage)
+      );
+
+      form.submit();
+      clearTimeout(uploadTimer);
+      uploadTimer = setTimeout(function() {
+        showStatus("ส่งภาพไม่สำเร็จ", "กรุณากดถ่ายใหม่แล้วลองอีกครั้ง", false);
+        retryButton.disabled = false;
+        confirmButton.disabled = false;
+      }, 30000);
+    }
+
+    function handleBridgeMessage(event) {
+      const data = event && event.data;
+      const bridgeFrame = document.getElementById("bridgeFrame");
+      const isBridgeSource = bridgeFrame && event.source === bridgeFrame.contentWindow;
+      const isAppsScriptOrigin = event.origin === "https://script.google.com" ||
+        /^https:\/\/[a-z0-9-]+\.googleusercontent\.com$/i.test(event.origin);
+      if (!isBridgeSource || !isAppsScriptOrigin || !data || data.source !== "ssc-camera-bridge" || data.token !== token) return;
+
+      clearTimeout(uploadTimer);
+      if (data.status !== "success") {
+        showStatus("ส่งภาพไม่สำเร็จ", data.message || "กรุณาลองอีกครั้ง", false);
+        retryButton.disabled = false;
+        confirmButton.disabled = false;
+        return;
+      }
+
+      const target = new URL(returnUrl);
+      target.searchParams.set("page", "idcard");
+      target.searchParams.set("cameraToken", token);
+      target.searchParams.set("cameraType", cameraType);
+      location.replace(target.toString());
+    }
+
+    function hiddenField(name, value) {
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = name;
+      input.value = value;
+      return input;
+    }
+
+    function showCameraError(message) {
+      stopCamera();
+      showStatus("เปิดกล้องไม่สำเร็จ", message, false);
+      captureButton.style.display = "none";
+      retryButton.style.display = "block";
+      retryButton.disabled = false;
+      confirmButton.style.display = "none";
+    }
+
+    function showStatus(title, message, spinning) {
+      statusTitle.textContent = title;
+      statusMessage.textContent = message;
+      statusSpinner.style.display = spinning ? "block" : "none";
+      statusPanel.classList.add("show");
+    }
+
+    function hideStatus() {
+      statusPanel.classList.remove("show");
+    }
+
+    function stopCamera() {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        stream = null;
+      }
+      video.srcObject = null;
+    }
+
+    function returnWithoutImage() {
+      stopCamera();
+      location.replace(returnUrl);
+    }
+
+    function createToken() {
+      if (crypto && typeof crypto.randomUUID === "function") {
+        return "CAM_" + crypto.randomUUID().replace(/-/g, "") + "_" + Date.now();
+      }
+      const random = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+      return "CAM_" + random + "_" + Date.now();
+    }
+
+    function getSafeReturnUrl(value) {
+      const fallback = new URL(DEFAULT_RETURN_URL);
+      if (!value) return fallback.toString();
+
+      try {
+        const parsed = new URL(value);
+        const isAllowedFirebase = parsed.protocol === "https:" && ALLOWED_RETURN_HOSTS.has(parsed.hostname);
+        return isAllowedFirebase ? parsed.toString() : fallback.toString();
+      } catch (err) {
+        return fallback.toString();
+      }
+    }
+  </script>
+</body>
+</html>
