@@ -94,8 +94,6 @@
         return /Line/i.test(ua);
       }
     }
-    enforceLineOnly();
-
     const APPS = {
       ssc: { title: "SSC", url: "https://fw-ssc.web.app/portal" },
       live: { title: "Live", url: "https://sakeppkk.github.io/live-tran/" }
@@ -114,6 +112,46 @@
     document.getElementById("fallbackTitle").textContent = app.title;
     openExternal.href = app.url;
     fallbackOpen.href = app.url;
+
+    async function buildSscTopLevelUrl() {
+      const routeByPage = {
+        portal: "/portal",
+        idcard: "/idcard",
+        myqueue: "/myqueue",
+        tv: "/tv"
+      };
+      const requestedPage = String(params.get("page") || "portal").toLowerCase();
+      const route = routeByPage[requestedPage] || routeByPage.portal;
+      const target = new URL(route, "https://fw-ssc.web.app");
+
+      ["homePage", "job", "jobNo", "queueCheckToken"].forEach(name => {
+        const value = params.get(name);
+        if (value) target.searchParams.set(name, value);
+      });
+
+      target.searchParams.set("source", "line-liff");
+      target.searchParams.set("lineSource", "line-liff");
+      target.searchParams.set("lineVerifiedLaunch", "1");
+
+      try {
+        const profile = await liff.getProfile();
+        target.searchParams.set("lineUserId", profile.userId || "");
+        target.searchParams.set("lineDisplayName", profile.displayName || "");
+        target.searchParams.set("lineProfileUrl", profile.pictureUrl || "");
+      } catch (err) {}
+
+      return target.toString();
+    }
+
+    async function startApp() {
+      const allowed = await enforceLineOnly();
+      if (!allowed) return;
+      if (key === "ssc") {
+        location.replace(await buildSscTopLevelUrl());
+        return;
+      }
+      loadFrame();
+    }
 
     function loadFrame(url = app.url) {
       fallback.classList.remove("show");
@@ -135,7 +173,7 @@
     frame.addEventListener("load", () => window.clearTimeout(window.fallbackTimer));
     frame.addEventListener("error", () => fallback.classList.add("show"));
     fitViewport();
-    loadFrame();
+    startApp();
   </script>
 </body>
 </html>
