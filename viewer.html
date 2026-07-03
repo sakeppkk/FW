@@ -66,7 +66,7 @@
       </div>
     </header>
     <main class="viewer">
-      <iframe id="frame" title="FW app viewer" loading="eager"></iframe>
+      <iframe id="frame" title="FW app viewer" loading="eager" allow="camera; microphone; fullscreen"></iframe>
       <section id="fallback" class="fallback" aria-live="polite">
         <div class="card">
           <h1 id="fallbackTitle">เปิดในแอพไม่ได้</h1>
@@ -97,7 +97,7 @@
     enforceLineOnly();
 
     const APPS = {
-      ssc: { title: "SSC", url: "https://script.google.com/macros/s/AKfycbwSfaw2bgEOciLgC6ownFi90CkENWWgjrTxBRCNlLFxEzXqNWaft87X6Etvz2xdF4d-/exec?page=portal" },
+      ssc: { title: "SSC", url: "https://fw-ssc.web.app/portal" },
       live: { title: "Live", url: "https://sakeppkk.github.io/live-tran/" }
     };
     const params = new URLSearchParams(window.location.search);
