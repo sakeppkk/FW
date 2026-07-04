@@ -66,7 +66,7 @@
       </div>
     </header>
     <main class="viewer">
-      <iframe id="frame" title="FW app viewer" loading="eager"></iframe>
+      <iframe id="frame" title="FW app viewer" loading="eager" allow="camera; microphone; fullscreen"></iframe>
       <section id="fallback" class="fallback" aria-live="polite">
         <div class="card">
           <h1 id="fallbackTitle">เปิดในแอพไม่ได้</h1>
@@ -112,18 +112,40 @@
     document.getElementById("title").textContent = app.title;
     document.getElementById("url").textContent = "";
     document.getElementById("fallbackTitle").textContent = app.title;
+    function buildAppUrl() {
+      if (key !== "ssc") return app.url;
+      const url = new URL(app.url);
+      const allowed = [
+        "page", "source", "lineSource", "lineUserId", "lineDisplayName", "lineProfileUrl",
+        "homePage", "fromTeam", "user", "recordId", "jobNo", "cameraToken", "cameraType",
+        "cameraReturnView", "cameraConsentAccepted", "cameraPhotoConsent", "queueCheckToken"
+      ];
+      allowed.forEach(name => {
+        const value = params.get(name);
+        if (value !== null && value !== "") url.searchParams.set(name, value);
+      });
+      if (!url.searchParams.get("page")) url.searchParams.set("page", "portal");
+      url.searchParams.set("sscWrapped", "1");
+      return url.toString();
+    }
+    const initialAppUrl = buildAppUrl();
     openExternal.href = app.url;
     fallbackOpen.href = app.url;
 
-    function loadFrame(url = app.url) {
+    function loadFrame(url = initialAppUrl) {
       fallback.classList.remove("show");
       frame.src = url;
       window.clearTimeout(window.fallbackTimer);
       window.fallbackTimer = window.setTimeout(() => fallback.classList.add("show"), 8000);
     }
-    function goAppHome() { loadFrame(app.url); }
+    function goAppHome() {
+      if (key !== "ssc") return loadFrame(app.url);
+      const home = new URL(initialAppUrl);
+      home.searchParams.set("page", "portal");
+      loadFrame(home.toString());
+    }
     function reloadFrame() {
-      const current = frame.src || app.url;
+      const current = frame.src || initialAppUrl;
       frame.src = "about:blank";
       window.setTimeout(() => loadFrame(current), 80);
     }
