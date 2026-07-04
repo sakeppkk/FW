@@ -325,7 +325,11 @@
       try {
         const parsed = new URL(value);
         const isAppsScript = parsed.protocol === "https:" && parsed.hostname === "script.google.com" && parsed.pathname.includes("/macros/s/");
-        return isAppsScript ? parsed.toString() : fallback.toString();
+        const isSscWrapper = parsed.protocol === "https:"
+          && parsed.hostname === "sakeppkk.github.io"
+          && parsed.pathname === "/FW/viewer.html"
+          && parsed.searchParams.get("app") === "ssc";
+        return (isAppsScript || isSscWrapper) ? parsed.toString() : fallback.toString();
       } catch (err) {
         return fallback.toString();
       }
