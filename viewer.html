@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#0f172a" />
   <title>FW Viewer</title>
+  <script>if(new URLSearchParams(location.search).get("app")==="ssc")document.documentElement.classList.add("ssc-mode");</script>
   <style>
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
     html,body{margin:0;height:100%;overflow:hidden}
@@ -25,6 +26,8 @@
     .card h1{margin:0 0 10px;font-size:24px}
     .card p{margin:0 0 18px;color:rgba(15,23,42,.66);line-height:1.55;font-weight:750}
     .card a{background:linear-gradient(135deg,#0f172a,#2563eb);border:0}
+    html.ssc-mode .wrap{grid-template-rows:minmax(0,1fr)}
+    html.ssc-mode .bar{display:none}
     @media(max-width:760px){
       .wrap{grid-template-rows:46px minmax(0,1fr)}
       .bar{display:flex;gap:6px;padding:4px 6px;overflow-x:auto;scrollbar-width:none}
