@@ -204,8 +204,8 @@
       sh = Math.max(1, Math.min(video.videoHeight - sy, sh));
 
       const canvas = document.createElement("canvas");
-      canvas.width = 1200;
-      canvas.height = Math.round(1200 / 1.586);
+      canvas.width = 1000;
+      canvas.height = Math.round(1000 / 1.586);
       const context = canvas.getContext("2d");
       context.fillStyle = "#ffffff";
       context.fillRect(0, 0, canvas.width, canvas.height);
@@ -213,7 +213,7 @@
       context.imageSmoothingQuality = "high";
       context.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
 
-      capturedImage = canvas.toDataURL("image/jpeg", 0.88);
+      capturedImage = canvas.toDataURL("image/jpeg", 0.68);
       preview.src = capturedImage;
       preview.style.display = "block";
       video.style.display = "none";
