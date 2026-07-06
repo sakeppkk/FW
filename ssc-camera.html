@@ -95,7 +95,8 @@
     const params = new URLSearchParams(location.search);
     const cameraType = params.get("cameraType") === "checkin" ? "checkin" : "register";
     const returnUrl = getSafeReturnUrl(params.get("returnUrl"));
-    const token = createToken();
+    const requestedToken = String(params.get("cameraToken") || "").trim();
+    const token = /^[A-Za-z0-9_-]{20,100}$/.test(requestedToken) ? requestedToken : createToken();
 
     const video = document.getElementById("cameraVideo");
     const preview = document.getElementById("previewImage");
