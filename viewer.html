@@ -97,7 +97,8 @@
         return /Line/i.test(ua);
       }
     }
-    enforceLineOnly();
+    // SSC Viewer is public-web capable. LIFF-only checks are applied only by
+    // features that explicitly need LINE, not by the portal shell itself.
 
     const APPS = {
       ssc: { title: "SSC", url: "https://script.google.com/macros/s/AKfycbwSfaw2bgEOciLgC6ownFi90CkENWWgjrTxBRCNlLFxEzXqNWaft87X6Etvz2xdF4d-/exec?page=portal" },
