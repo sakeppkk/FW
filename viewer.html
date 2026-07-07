@@ -110,6 +110,56 @@
     const fallback = document.getElementById("fallback");
     const openExternal = document.getElementById("openExternal");
     const fallbackOpen = document.getElementById("fallbackOpen");
+    let cameraRequesterWindow = null;
+    let cameraRequestId = "";
+    let cameraOverlay = null;
+
+    function closeEmbeddedCamera() {
+      if (cameraOverlay) cameraOverlay.remove();
+      cameraOverlay = null;
+      cameraRequesterWindow = null;
+      cameraRequestId = "";
+    }
+
+    function openEmbeddedCamera(requester, data) {
+      closeEmbeddedCamera();
+      cameraRequesterWindow = requester;
+      cameraRequestId = String(data.requestId || "");
+      const overlay = document.createElement("div");
+      overlay.id = "sscCameraOverlay";
+      overlay.style.cssText = "position:fixed;inset:0;z-index:100000;background:#020617;";
+      const cameraFrame = document.createElement("iframe");
+      cameraFrame.title = "SSC Card Camera";
+      cameraFrame.allow = "camera; fullscreen";
+      cameraFrame.style.cssText = "width:100%;height:100%;border:0;display:block;background:#020617;";
+      const cameraUrl = new URL("./ssc-camera.html", location.href);
+      cameraUrl.searchParams.set("embedded", "1");
+      cameraUrl.searchParams.set("requestId", cameraRequestId);
+      cameraUrl.searchParams.set("cameraType", data.cameraType === "checkin" ? "checkin" : "register");
+      cameraFrame.src = cameraUrl.toString();
+      overlay.appendChild(cameraFrame);
+      document.body.appendChild(overlay);
+      cameraOverlay = overlay;
+      requester.postMessage({ source: "ssc-viewer-camera", action: "ready", requestId: cameraRequestId }, "*");
+    }
+
+    window.addEventListener("message", event => {
+      const data = event.data || {};
+      if (data.source === "ssc-idcard-camera" && data.action === "open" && key === "ssc") {
+        openEmbeddedCamera(event.source, data);
+        return;
+      }
+      if (data.source !== "ssc-camera-embedded" || event.origin !== location.origin) return;
+      if (!cameraRequesterWindow || data.requestId !== cameraRequestId) return;
+      cameraRequesterWindow.postMessage({
+        source: "ssc-viewer-camera",
+        action: data.action === "capture" ? "capture" : "cancel",
+        requestId: cameraRequestId,
+        cameraType: data.cameraType,
+        imageData: data.action === "capture" ? data.imageData : ""
+      }, "*");
+      closeEmbeddedCamera();
+    });
 
     document.title = `FW - ${app.title}`;
     document.getElementById("title").textContent = app.title;

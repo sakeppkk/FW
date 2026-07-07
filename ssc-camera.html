@@ -94,6 +94,8 @@
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwSfaw2bgEOciLgC6ownFi90CkENWWgjrTxBRCNlLFxEzXqNWaft87X6Etvz2xdF4d-/exec";
     const params = new URLSearchParams(location.search);
     const cameraType = params.get("cameraType") === "checkin" ? "checkin" : "register";
+    const embeddedMode = params.get("embedded") === "1";
+    const embeddedRequestId = String(params.get("requestId") || "");
     const returnUrl = getSafeReturnUrl(params.get("returnUrl"));
     const requestedToken = String(params.get("cameraToken") || "").trim();
     const token = /^[A-Za-z0-9_-]{20,100}$/.test(requestedToken) ? requestedToken : createToken();
@@ -232,6 +234,11 @@
       confirmButton.disabled = true;
       showStatus("กำลังส่งภาพกลับ SSC", "กรุณารอสักครู่และอย่าปิดหน้านี้", true);
 
+      if (embeddedMode && window.parent !== window) {
+        window.parent.postMessage({ source: "ssc-camera-embedded", action: "capture", requestId: embeddedRequestId, cameraType: cameraType, imageData: capturedImage }, location.origin);
+        return;
+      }
+
       const form = document.getElementById("bridgeForm");
       form.action = APPS_SCRIPT_URL;
       form.replaceChildren(
@@ -309,6 +316,10 @@
 
     function returnWithoutImage() {
       stopCamera();
+      if (embeddedMode && window.parent !== window) {
+        window.parent.postMessage({ source: "ssc-camera-embedded", action: "cancel", requestId: embeddedRequestId, cameraType: cameraType }, location.origin);
+        return;
+      }
       location.replace(returnUrl);
     }
 
