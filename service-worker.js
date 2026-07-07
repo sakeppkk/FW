@@ -1,4 +1,4 @@
-const CACHE_NAME='fw-pwa-v14-public-ssc-viewer';
+const CACHE_NAME='fw-pwa-v15-public-fw-home';
 const ASSETS=['./','./index.html','./viewer.html','./ssc-camera.html','./manifest.json','./icon.svg'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE_NAME).then(c=>c.addAll(ASSETS)));self.skipWaiting()});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('fw-pwa-')&&k!==CACHE_NAME).map(k=>caches.delete(k)))));self.clients.claim()});

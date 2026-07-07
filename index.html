@@ -101,7 +101,8 @@
         return /Line/i.test(ua);
       }
     }
-    enforceLineOnly();
+    // FW home is available from any browser. Features that require LIFF
+    // perform their own LINE checks when opened.
 
     function openViewer(app){location.href='./viewer.html?app='+encodeURIComponent(app)}
     if('serviceWorker'in navigator){addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js'))}
