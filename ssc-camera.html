@@ -270,7 +270,8 @@
       }
 
       const target = new URL(returnUrl);
-      target.searchParams.set("page", "idcard");
+      // Keep the caller's destination page (idcard or idcarddual).
+      if (!target.searchParams.get("page")) target.searchParams.set("page", "idcard");
       target.searchParams.set("cameraToken", token);
       target.searchParams.set("cameraType", cameraType);
       setTimeout(function() {
